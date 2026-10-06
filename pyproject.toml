@@ -1,0 +1,28 @@
+[project]
+name = "name-selector"
+version = "0.1.0"
+description = "Rank Spanish girls' names by infosec-friendliness, commonness and 'Cumpleaños feliz' fit, using INE data."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "openpyxl>=3.1",
+]
+
+[project.scripts]
+name-selector = "name_selector.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "COM"]
