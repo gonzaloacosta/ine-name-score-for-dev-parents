@@ -128,7 +128,9 @@ function surnamesFromForm() {
 async function search() {
   const id = ++requestId;
   const params = new URLSearchParams({ top: String(TOP), sex: state.sex });
-  const [surname1, surname2] = surnamesFromForm();
+  // Captured now: edits made while the request is in flight were not searched.
+  const surnames = surnamesFromForm();
+  const [surname1, surname2] = surnames;
   if (surname1) params.set("surname1", surname1);
   if (surname2) params.set("surname2", surname2);
   if (new FormData(form).get("ascii")) params.set("ascii_only", "true");
@@ -143,6 +145,7 @@ async function search() {
     if (response.status === 422) {
       lastFailure = "invalid";
       lastBody = null;
+      saveSurnames([]); // the name page must not check emails against rejected surnames
       for (const input of form.querySelectorAll("input[name^=surname]")) {
         if (input.value.trim()) input.setAttribute("aria-invalid", "true");
       }
@@ -154,7 +157,7 @@ async function search() {
     if (id !== requestId) return;
     lastBody = body;
     lastFailure = null;
-    saveSurnames(surnamesFromForm());
+    saveSurnames(surnames);
     render(body);
   } catch (error) {
     if (id !== requestId) return;

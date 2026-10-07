@@ -54,7 +54,7 @@ def fetch(raw_dir: Path, years: tuple[int, ...] = DEFAULT_BIRTH_YEARS) -> None:
 
 
 def parse_census(path: Path, sex: Sex = Sex.FEMALE) -> list[tuple[str, int, float]]:
-    """Return ``(name, frequency, mean_age)`` for simple (single-word) names of one sex."""
+    """Return ``(name, frequency, mean_age)`` for every simple or compound name of one sex."""
     sheet = CENSUS_SHEETS[sex]
     ws = openpyxl.load_workbook(path, read_only=True)[sheet]
     rows = ws.iter_rows(values_only=True)
@@ -68,8 +68,7 @@ def parse_census(path: Path, sex: Sex = Sex.FEMALE) -> list[tuple[str, int, floa
     for order, name, freq, age, *_ in rows:
         if not isinstance(order, int):
             break  # footnotes follow the data block
-        if " " not in name:
-            result.append((name.strip(), int(freq), float(age)))
+        result.append((name.strip(), int(freq), float(age)))
     return result
 
 

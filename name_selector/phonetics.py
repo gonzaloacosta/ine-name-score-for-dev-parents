@@ -4,6 +4,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from enum import Enum
+from functools import cache
 
 STRONG_VOWELS = set("aeoáéó")
 ACCENTED_WEAK_VOWELS = set("íú")
@@ -80,16 +81,26 @@ def syllabify(word: str) -> Syllabification:
     )
 
 
+# Letters INE keeps in its upper-cased, accent-free keys (BEGOÑA, LLORENÇ).
+_KEPT_LETTERS = "ñÑçÇ"
+
+
 def strip_accents(text: str) -> str:
-    text = text.replace("ñ", "\0").replace("Ñ", "\1")
+    text = unicodedata.normalize("NFC", text)
+    placeholders = {letter: chr(i) for i, letter in enumerate(_KEPT_LETTERS)}
+    for letter, placeholder in placeholders.items():
+        text = text.replace(letter, placeholder)
     stripped = "".join(
         c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn"
     )
-    return stripped.replace("\0", "ñ").replace("\1", "Ñ")
+    for letter, placeholder in placeholders.items():
+        stripped = stripped.replace(placeholder, letter)
+    return stripped
 
 
 # Ordered rewrite rules; digits are placeholders that later rules must not touch.
 _KEY_RULES: list[tuple[str, str]] = [
+    (r"Ç", "S"),  # Catalan c-cedilla: Llorenç, Vicenç
     (r"PH", "F"),
     (r"TH", "T"),
     (r"SH", "S"),
@@ -113,9 +124,10 @@ _KEY_RULES: list[tuple[str, str]] = [
 ]
 
 
+@cache  # pure, and called for every census name (~32k per sex) on each ranking
 def phonetic_key(name: str) -> str:
     """Collapse spellings that sound the same in Spanish (b/v, silent h, y/i, seseo...)."""
-    key = re.sub(r"[^A-ZÑ]", "", strip_accents(name).upper())
+    key = re.sub(r"[^A-ZÑÇ]", "", strip_accents(name).upper())
     for pattern, replacement in _KEY_RULES:
         key = re.sub(pattern, replacement, key)
     return key

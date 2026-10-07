@@ -39,8 +39,10 @@ export const STRINGS = {
     loadingName: "Calculando la puntuación…",
     placeInPool: (sex, rank, size) =>
       `Puesto ${rank} de los ${size} ${pick(sex, "nombres de niña", "nombres de niño")} más puestos en España.`,
-    outsidePool: (sex) =>
-      `No está entre los ${pick(sex, "nombres de niña", "nombres de niño")} más puestos en 2023 y 2024, así que lo comparamos con ellos.`,
+    outsidePool: (sex, years) =>
+      `No está entre los ${pick(sex, "nombres de niña", "nombres de niño")} más puestos en ${years}, así que lo comparamos con ellos.`,
+    droppedFromList: "Con vuestros apellidos este nombre queda fuera de la lista: mirad sus emails más abajo.",
+    spellingUnchecked: "Lo puntuamos tal y como lo has escrito. Si lleva tilde, escríbela para que la puntuación sea exacta.",
     totalScore: "Puntuación total",
     criteriaTitle: "Cómo se calcula",
     criteria: {
@@ -79,7 +81,7 @@ export const STRINGS = {
       llana: "llana (acento en la penúltima)",
       "esdrújula": "esdrújula (acento en la antepenúltima)",
     },
-    shapeValue: (n, stress) => `${n} sílabas, ${stress}`,
+    shapeValue: (n, stress) => `${n} ${n === 1 ? "sílaba" : "sílabas"}, ${stress}`,
     pageTitle: (name) => `Puntuación de ${name}`,
     handlesTitle: (surnames) => `Emails y usuarios con ${surnames}`,
     handlesTitleNone: "Emails y usuarios",
@@ -125,8 +127,10 @@ export const STRINGS = {
     loadingName: "Working out the score…",
     placeInPool: (sex, rank, size) =>
       `Number ${rank} of the ${size} most common ${pick(sex, "girls’", "boys’")} names in Spain.`,
-    outsidePool: (sex) =>
-      `Not among the most common ${pick(sex, "girls’", "boys’")} names of 2023 and 2024, so it is measured against them.`,
+    outsidePool: (sex, years) =>
+      `Not among the most common ${pick(sex, "girls’", "boys’")} names of ${years}, so it is measured against them.`,
+    droppedFromList: "With your surnames this name is dropped from the list: see its emails below.",
+    spellingUnchecked: "Scored exactly as typed. If it has an accent, type it so the score is exact.",
     totalScore: "Total score",
     criteriaTitle: "How it is scored",
     criteria: {
@@ -159,7 +163,7 @@ export const STRINGS = {
       llana: "stressed on the second-to-last",
       "esdrújula": "stressed on the third-to-last",
     },
-    shapeValue: (n, stress) => `${n} syllables, ${stress}`,
+    shapeValue: (n, stress) => `${n} ${n === 1 ? "syllable" : "syllables"}, ${stress}`,
     pageTitle: (name) => `Score for ${name}`,
     handlesTitle: (surnames) => `Emails and usernames with ${surnames}`,
     handlesTitleNone: "Emails and usernames",

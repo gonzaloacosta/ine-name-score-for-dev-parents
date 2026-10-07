@@ -24,10 +24,10 @@
       </div>
 
       <header class="hero">
-        <p class="song">
+        <h1 class="song">
           <span class="song-line" data-i18n="songLine">Cumpleaños feliz, querida</span>
           <span class="song-name" id="song-name"></span>
-        </p>
+        </h1>
       </header>
 
       <div id="status" role="status" aria-live="polite"></div>
@@ -38,7 +38,10 @@
             <span class="total-number" id="total-number"></span>
             <span class="total-label" data-i18n="totalScore">Puntuación total</span>
           </div>
-          <p id="place"></p>
+          <div>
+            <p id="place"></p>
+            <p class="hint" id="spelling-note" hidden></p>
+          </div>
         </section>
 
         <section>

@@ -260,7 +260,7 @@ def test_explain_pool_name_matches_ranking():
     assert body["rank"] == 1
     assert body["total"] == first["total"]
     assert body["criteria"] == first["criteria"]
-    assert body["pool_size"] == 105
+    assert body["pool_size"] == len(rank(top=200).json()["names"])
     assert body["handles"] == []
     assert body["excluded"] is False
 
@@ -305,3 +305,21 @@ def test_explain_without_surnames_is_cacheable():
 )
 def test_explain_rejects_invalid_names(params):
     assert explain_name(**params).status_code == 422
+
+
+def test_explain_name_without_vowels_is_422():
+    assert explain_name(name="Brr").status_code == 422
+
+
+def test_explain_reports_unverified_spelling():
+    assert explain_name(name="Zenobia").json()["spelling_checked"] is False
+    assert explain_name(name="Paula").json()["spelling_checked"] is True
+
+
+def test_explain_rank_matches_the_filtered_list():
+    listed = [n["name"] for n in rank(surname1="Ordo", top=200).json()["names"]]
+
+    zoe = explain_name(name="Zoe", surname1="Ordo").json()
+
+    assert zoe["rank"] == listed.index("Zoe") + 1
+    assert explain_name(name="Gala", surname1="Ordo").json()["rank"] is None

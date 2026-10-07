@@ -4,6 +4,7 @@ import {
   bindLanguage,
   el,
   formatSource,
+  formatYears,
   handleWithWord,
   listUrl,
   loadSurnames,
@@ -70,8 +71,13 @@ function render() {
   document.getElementById("song-name").textContent = body.name;
   document.title = t("pageTitle", body.name);
   document.getElementById("total-number").textContent = String(Math.round(body.total * 100));
-  document.getElementById("place").textContent =
-    body.rank ? t("placeInPool", state.sex, body.rank, body.pool_size) : t("outsidePool", state.sex);
+  let place = t("outsidePool", state.sex, formatYears(body.data.birth_years));
+  if (body.rank) place = t("placeInPool", state.sex, body.rank, body.pool_size);
+  else if (body.excluded) place = t("droppedFromList");
+  document.getElementById("place").textContent = place;
+  const note = document.getElementById("spelling-note");
+  note.hidden = body.spelling_checked;
+  note.textContent = body.spelling_checked ? "" : t("spellingUnchecked");
 
   document.getElementById("criteria").replaceChildren(...CRITERIA.map((key) => criterionItem(key, body.criteria[key])));
 

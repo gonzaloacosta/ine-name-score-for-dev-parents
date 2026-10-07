@@ -43,13 +43,17 @@ def write_births_fixture(path: Path) -> None:
     wb.save(path)
 
 
-def test_parse_census_keeps_simple_names_only(tmp_path):
+def test_parse_census_keeps_simple_and_compound_names(tmp_path):
     path = tmp_path / "census.xlsx"
     write_census_fixture(path)
 
     rows = parse_census(path)
 
-    assert rows == [("MARIA", 543083, 48.3), ("JULIA", 120000, 30.1)]
+    assert rows == [
+        ("MARIA CARMEN", 618622, 62.6),
+        ("MARIA", 543083, 48.3),
+        ("JULIA", 120000, 30.1),
+    ]
 
 
 def test_parse_births_reads_girls_column(tmp_path):
@@ -63,7 +67,7 @@ def test_parse_census_reads_men_sheet_for_male(tmp_path):
     path = tmp_path / "census.xlsx"
     write_census_fixture(path)
 
-    assert parse_census(path, Sex.MALE) == [("HUGO", 90000, 12.4)]
+    assert parse_census(path, Sex.MALE) == [("JOSE ANTONIO", 400000, 55.0), ("HUGO", 90000, 12.4)]
 
 
 def test_parse_births_reads_boys_column_for_male(tmp_path):
@@ -87,7 +91,7 @@ def test_lexicon_keys_are_ine_style_uppercase_ascii():
     for lexicon in LEXICONS.values():
         for key in lexicon:
             assert key == key.upper()
-            assert key.isascii() and key.isalpha()
+            assert key.isalpha() and set(key) <= set("ABCDEFGHIJKLMNOPQRSTUVWXYZÑÇ")
 
 
 def test_spelling_is_looked_up_per_sex():
@@ -134,27 +138,40 @@ ALLOWED_CONSONANT_AGUDAS = {
         "ADAY",
         "MAX",
         "NIL",
-        "ELIAS",
-        "ERIC",
-        "ERIK",
         "ARAN",
-        "AXEL",
         "BIEL",
         "GAEL",
         "JAN",
         "KAI",
-        "LIAM",
         "MARC",
         "PAU",
         "RAYAN",
         "ALEIX",
         "DANIEL",
         "MIGUEL",
-        "SAUL",
         "AITOR",
         "JAVIER",
     },
 }
+
+
+@pytest.mark.parametrize(
+    ("name", "syllables", "stress"),
+    [
+        ("ERIC", 2, "llana"),
+        ("ERIK", 2, "llana"),
+        ("AXEL", 2, "llana"),
+        ("LIAM", 2, "llana"),
+        ("UNAI", 2, "aguda"),
+        ("ARNAU", 2, "aguda"),
+    ],
+)
+def test_boys_pronunciation_overrides(name, syllables, stress):
+    from name_selector.phonetics import syllabify
+
+    result = syllabify(spelling_for(name, Sex.MALE).pronunciation)
+
+    assert (result.count, result.stress.value) == (syllables, stress)
 
 
 def test_load_male_pool_uses_boys_data():

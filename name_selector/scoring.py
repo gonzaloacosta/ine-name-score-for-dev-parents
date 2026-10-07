@@ -7,7 +7,8 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from name_selector.handles import BadHandle, find_bad_handles
-from name_selector.models import Candidate, ScoredName
+from name_selector.lexicon import LEXICONS
+from name_selector.models import Candidate, ScoredName, Sex
 from name_selector.phonetics import Stress, Syllabification, phonetic_key, strip_accents, syllabify
 
 DEFAULT_WEIGHTS: dict[str, float] = {
@@ -70,7 +71,9 @@ def spelling_score(
     """
     sound_totals = sound_totals if sound_totals is not None else _sound_totals(census)
     same_sound = sound_totals.get(phonetic_key(key), 0)
-    share = census.get(key, 0) / same_sound if same_sound else 1.0
+    if not same_sound:
+        return 0.0  # nobody in Spain has this sound: no evidence it is spelled one way
+    share = census.get(key, 0) / same_sound
     return share * (0.85 if FOREIGN_GRAPHEMES.search(key) else 1.0)
 
 
@@ -176,14 +179,37 @@ def rank(
 @dataclass(frozen=True)
 class Explanation:
     scored: ScoredName
-    position: int | None  # place in the default ranking; None when outside the top-100 pool
-    pool_size: int
+    position: int | None  # place in the list for these surnames; None if outside or dropped
+    pool_size: int  # names in that list
     in_census: bool
+    spelling_checked: bool  # False when the written form (accents) could not be verified
+    excluded: bool  # dropped from the list because of a bad email/username
+
+
+# Lower-case inside a name unless first: "María de la O", "Juan y Medio".
+NAME_PARTICLES = {"de", "del", "la", "las", "los", "y", "i", "e", "da", "do", "dos", "van", "von"}
+VOWELS = set("aeiouáéíóúàèìòùäëïöüy")
 
 
 def name_key(name: str) -> str:
-    """INE form of a typed name: uppercase, no accents, single spaces."""
-    return " ".join(strip_accents(name).upper().split())
+    """INE form of a typed name: uppercase, no accents (keeps Ñ, Ç), single spaces."""
+    return " ".join(strip_accents(name).upper().replace("-", " ").split())
+
+
+def display_name(typed: str) -> str:
+    """Capitalise like a name: "maria de la o" -> "María de la O", "o'neill" -> "O'Neill"."""
+    words = []
+    for i, word in enumerate(typed.split()):
+        lower = word.lower()
+        if i and lower in NAME_PARTICLES:
+            words.append(lower)
+        else:
+            words.append(re.sub(r"(^|[-'])(\w)", lambda m: m.group(1) + m.group(2).upper(), lower))
+    return " ".join(words)
+
+
+def _has_diacritics(text: str) -> bool:
+    return strip_accents(text) != text or bool(set(text.lower()) & set("ñç"))
 
 
 def explain(
@@ -192,24 +218,45 @@ def explain(
     census: Mapping[str, int],
     weights: Mapping[str, float],
     ages: Mapping[str, float] | None = None,
+    sex: Sex = Sex.FEMALE,
+    surnames: list[str] | None = None,
 ) -> Explanation:
-    """Score any name. Pool names reuse their ranking entry; others use the typed spelling
-    and are measured on the same scale as the pool."""
+    """Score any name. Pool names reuse their ranking entry; others use the curated or typed
+    spelling and are measured on the same scale as the pool."""
+    if not set(strip_accents(name).lower()) & VOWELS:
+        raise ValueError(f"{name!r} has no vowel: not a name we can score")
     candidates = list(candidates)
     key = name_key(name)
     ranked = rank(candidates, census, weights)
-    for position, scored in enumerate(ranked, start=1):
-        if scored.candidate.key == key:
-            return Explanation(scored, position, len(ranked), key in census)
+    listed = rank(candidates, census, weights, surnames=surnames) if surnames else ranked
 
-    written = " ".join(word[:1].upper() + word[1:].lower() for word in name.split())
-    candidate = Candidate(
-        key=key,
-        written=written,
-        pronunciation=written,
-        census_frequency=census.get(key, 0),
-        census_mean_age=(ages or {}).get(key),
-        births={},
-    )
-    scored = _score(candidate, census, _sound_totals(census), _Ranges.of(candidates), weights)
-    return Explanation(scored, None, len(ranked), key in census)
+    scored = next((s for s in ranked if s.candidate.key == key), None)
+    spelling_checked = True
+    if scored is None:
+        curated = LEXICONS[sex].get(key)
+        if curated and not _has_diacritics(name):
+            written, pronunciation = curated.written, curated.pronunciation or curated.written
+        else:
+            # Restore accents word by word where we know them: "maria jose" -> "María José".
+            lexicon = LEXICONS[sex]
+            words = [
+                lexicon[name_key(w)].written
+                if not _has_diacritics(w) and name_key(w) in lexicon
+                else w
+                for w in display_name(name).split()
+            ]
+            written = pronunciation = " ".join(words)
+            spelling_checked = _has_diacritics(name)
+        candidate = Candidate(
+            key=key,
+            written=written,
+            pronunciation=pronunciation,
+            census_frequency=census.get(key, 0),
+            census_mean_age=(ages or {}).get(key),
+            births={},
+        )
+        scored = _score(candidate, census, _sound_totals(census), _Ranges.of(candidates), weights)
+
+    position = next((i for i, s in enumerate(listed, start=1) if s.candidate.key == key), None)
+    excluded = bool(surnames and find_bad_handles(scored.candidate.written, surnames))
+    return Explanation(scored, position, len(listed), key in census, spelling_checked, excluded)

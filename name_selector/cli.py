@@ -3,6 +3,7 @@
 import argparse
 import logging
 import sys
+import unicodedata
 from pathlib import Path
 
 from name_selector import dataset, ine
@@ -67,7 +68,8 @@ def cmd_handles(args: argparse.Namespace) -> int:
 def cmd_explain(args: argparse.Namespace) -> int:
     candidates, census = dataset.load(args.data_dir, args.sex)
     ages = dataset.load_ages(args.data_dir, args.sex)
-    result = explain(args.name, candidates, census, parse_weights(args.weights), ages)
+    name = unicodedata.normalize("NFC", args.name)
+    result = explain(name, candidates, census, parse_weights(args.weights), ages, args.sex)
     s, c = result.scored, result.scored.candidate
     people = "women" if args.sex is Sex.FEMALE else "men"
     if result.position:

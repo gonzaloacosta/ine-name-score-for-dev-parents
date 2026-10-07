@@ -129,7 +129,10 @@ def get_explain(
         raise _invalid("name", "a name is required")
     surnames = _clean_surnames(surname1, surname2)
     candidates, census, ages = _load_data(sex)
-    result = explain(typed, candidates, census, DEFAULT_WEIGHTS, ages)
+    try:
+        result = explain(typed, candidates, census, DEFAULT_WEIGHTS, ages, sex, surnames or None)
+    except ValueError as exc:  # e.g. no vowels: "Brr"
+        raise _invalid("name", "not a name we can score") from exc
     c = result.scored.candidate
 
     bad = {h.handle: h for h in find_bad_handles(c.written, surnames)} if surnames else {}
@@ -151,7 +154,8 @@ def get_explain(
         "in_census": result.in_census,
         "census_mean_age": c.census_mean_age,
         "ends_in_vowel": result.scored.syllables.ends_in_vowel,
+        "spelling_checked": result.spelling_checked,
         "handles": handles,
-        "excluded": bool(bad),
+        "excluded": result.excluded,
         "data": _data_json(candidates),
     }

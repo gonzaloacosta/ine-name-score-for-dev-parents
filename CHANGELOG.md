@@ -14,6 +14,14 @@
 ### Changed
 - Tagline now states that names are safe, easy to pair with surnames and free of joke-prone
   email combinations.
+- Census CSVs keep compound names (María José) for lookups; Ç is kept in keys like Ñ.
+- `phonetic_key` is memoised: uncached API calls drop from ~280 ms to under 15 ms.
+
+### Fixed
+- Site no longer goes blank when the browser blocks site storage.
+- Names without vowels return 422 instead of 500; unknown sounds get no spelling credit.
+- Boys' stress: Eric, Erik, Axel, Liam (llana) and Unai, Arnau (aguda).
+- Score page rank matches the surname-filtered list; dropped names say so.
 
 ## 0.3.0 - 2026-10-07
 

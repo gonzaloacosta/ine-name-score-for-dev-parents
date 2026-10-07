@@ -73,3 +73,86 @@ def test_cli_explain_supports_boys_and_names_outside_the_pool(capsys):
 def test_cli_rank_for_boys(capsys):
     assert main(["--sex", "male", "rank", "--top", "3"]) == 0
     assert "Pablo" in capsys.readouterr().out
+
+
+# Review fixes
+@pytest.fixture(scope="module")
+def boys():
+    return dataset.load(sex=Sex.MALE)
+
+
+def test_cedilla_names_are_found_in_the_census(boys):
+    candidates, census = boys
+
+    result = explain("Llorenç", candidates, census, DEFAULT_WEIGHTS)
+
+    assert result.in_census
+    assert result.scored.candidate.census_frequency == census["LLORENÇ"]
+
+
+@pytest.mark.parametrize("name", ["María José", "maria jose", "Ana-Belén"])
+def test_compound_names_are_found_in_the_census(girls, name):
+    candidates, census = girls
+
+    assert explain(name, candidates, census, DEFAULT_WEIGHTS).in_census
+
+
+def test_typed_name_without_accent_uses_the_lexicon_outside_the_pool(girls, boys):
+    g_candidates, g_census = girls
+    b_candidates, b_census = boys
+
+    monica = explain("Monica", g_candidates, g_census, DEFAULT_WEIGHTS, sex=Sex.FEMALE)
+    oscar = explain("oscar", b_candidates, b_census, DEFAULT_WEIGHTS, sex=Sex.MALE)
+
+    assert monica.scored.candidate.written == "Mónica"
+    assert monica.spelling_checked
+    assert oscar.scored.candidate.written == "Óscar"
+    assert oscar.scored.syllables.stress.value == "llana"
+
+
+def test_unverified_spelling_is_flagged(girls):
+    candidates, census = girls
+
+    assert not explain("Zenobia", candidates, census, DEFAULT_WEIGHTS).spelling_checked
+    assert explain("Paula", candidates, census, DEFAULT_WEIGHTS).spelling_checked
+    assert explain("Begoña", candidates, census, DEFAULT_WEIGHTS).spelling_checked  # typed accent
+
+
+def test_unknown_name_gets_no_spelling_credit(girls):
+    candidates, census = girls
+
+    assert explain("Zzyzx", candidates, census, DEFAULT_WEIGHTS).scored.criteria["spelling"] == 0.0
+
+
+def test_name_without_vowels_is_rejected(girls):
+    candidates, census = girls
+
+    with pytest.raises(ValueError, match="vowel"):
+        explain("Brr", candidates, census, DEFAULT_WEIGHTS)
+
+
+def test_rank_position_respects_surnames(girls):
+    candidates, census = girls
+    listed = rank(candidates, census, DEFAULT_WEIGHTS, surnames=["Ordo"])
+    zoe_position = next(i for i, s in enumerate(listed, 1) if s.candidate.key == "ZOE")
+
+    zoe = explain("Zoe", candidates, census, DEFAULT_WEIGHTS, surnames=["Ordo"])
+    gala = explain("Gala", candidates, census, DEFAULT_WEIGHTS, surnames=["Ordo"])
+
+    assert zoe.position == zoe_position
+    assert gala.position is None and gala.excluded
+
+
+@pytest.mark.parametrize(
+    ("typed", "written"),
+    [("maria de la o", "María de la O"), ("o'neill", "O'Neill"), ("ana-belén", "Ana-Belén")],
+)
+def test_typed_names_are_capitalised_like_names(girls, typed, written):
+    candidates, census = girls
+
+    assert explain(typed, candidates, census, DEFAULT_WEIGHTS).scored.candidate.written == written
+
+
+def test_cli_explain_rejects_names_without_vowels(capsys):
+    assert main(["explain", "Brr"]) == 2
+    assert "vowel" in capsys.readouterr().err
