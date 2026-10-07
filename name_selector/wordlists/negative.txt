@@ -1,0 +1,68 @@
+# Negative / teasing words: flagged only at the START or END of a generated handle,
+# which is where people actually read them ("gordo@", "...sucia@").
+# Lowercase, ASCII only. Spanish + English.
+
+# Spanish: body, looks
+gorda
+gordo
+fea
+feo
+vaca
+foca
+ballena
+morsa
+cerda
+cerdo
+enana
+bizca
+calva
+# Spanish: intelligence, character
+tonta
+tonto
+boba
+bobo
+lela
+mema
+burra
+burro
+lerda
+torpe
+loca
+loco
+mala
+malo
+sosa
+pava
+petarda
+cateta
+bruja
+rata
+sucia
+sucio
+mocosa
+chunga
+# Spanish: scatological / childish
+caca
+pedo
+pis
+pipi
+popo
+moco
+cono
+pito
+paja
+coca
+muerta
+muerte
+
+# English
+fat
+ugly
+dumb
+pig
+cow
+dead
+fart
+poop
+weird
+nerd

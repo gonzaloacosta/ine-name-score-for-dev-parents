@@ -20,5 +20,14 @@ Safety choices:
 
 Note: merges made with `GITHUB_TOKEN` do not trigger new workflow runs, so there is no extra
 `push` run on `main` after an auto-merge. That's fine: the merged code is exactly what was
-tested on the PR head (`--match-head-commit`). The PR branch must be up to date with `main`
-for that to hold; enable "Require branches to be up to date" in branch protection to enforce it.
+tested on the PR head (`--match-head-commit`), and branch protection requires the PR branch
+to be up to date with `main`.
+
+## Branch protection on `main`
+
+- PR required (0 approvals, so the auto-merge can proceed); no direct pushes, also for admins.
+- Required checks: `test (py3.11)`, `test (py3.12)`, `test (py3.13)`; branch must be up to date.
+- Linear history (squash merges only); no force pushes or deletion.
+
+If a PR is behind `main`, the merge is refused: rebase it (or press "Update branch") and CI
+re-runs. Renaming the `test` job or the Python matrix requires updating the required checks.

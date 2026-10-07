@@ -1,0 +1,65 @@
+# Offensive words: flagged ANYWHERE in a generated handle.
+# Lowercase, ASCII only (email handles cannot carry accents or ñ). Spanish + English.
+# Keep entries >= 4 letters unless they are unmistakable: short words match too eagerly.
+
+# Spanish
+puta
+puto
+mierda
+polla
+zorra
+perra
+cabron
+cabrona
+joder
+follar
+mamada
+chocho
+chumino
+verga
+pene
+teta
+tetas
+culo
+anal
+sexo
+porno
+nazi
+gilipollas
+imbecil
+idiota
+subnormal
+retrasada
+mongola
+maricon
+bollera
+guarra
+furcia
+ramera
+pajera
+orgia
+droga
+violada
+pedofila
+
+# English
+fuck
+shit
+bitch
+slut
+whore
+cunt
+dick
+cock
+pussy
+porn
+sexy
+rape
+kill
+stupid
+idiot
+loser
+boob
+boobs
+butt
+piss

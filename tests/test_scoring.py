@@ -5,6 +5,7 @@ from name_selector.phonetics import syllabify
 from name_selector.scoring import (
     DEFAULT_WEIGHTS,
     ascii_score,
+    excluded_by_handles,
     log_scale,
     parse_weights,
     rank,
@@ -101,3 +102,14 @@ def test_rank_orders_by_weighted_total_and_can_filter_non_ascii():
     assert ranked[-1].candidate.key == "ZENOBIA"
     assert "LUCIA" not in [r.candidate.key for r in ascii_only]
     assert all(0.0 <= r.total <= 1.0 for r in ranked)
+
+
+def test_rank_with_surnames_excludes_names_that_form_bad_handles():
+    candidates = [make_candidate("JULIA"), make_candidate("GALA")]
+    census = {"JULIA": 10_000, "GALA": 10_000}
+
+    ranked = rank(candidates, census, DEFAULT_WEIGHTS, surnames=["Ordo"])
+    excluded = excluded_by_handles(candidates, ["Ordo"])
+
+    assert [r.candidate.key for r in ranked] == ["JULIA"]
+    assert [c.key for c, _ in excluded] == ["GALA"]  # g + ordo -> gordo

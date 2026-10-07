@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
+from name_selector.handles import BadHandle, find_bad_handles
 from name_selector.models import Candidate, ScoredName
 from name_selector.phonetics import Stress, Syllabification, phonetic_key, syllabify
 
@@ -102,13 +103,29 @@ def _sound_totals(census: Mapping[str, int]) -> dict[str, int]:
     return totals
 
 
+def excluded_by_handles(
+    candidates: Iterable[Candidate],
+    surnames: list[str],
+) -> list[tuple[Candidate, list[BadHandle]]]:
+    """Candidates whose future email/username with these surnames spells a bad word."""
+    hits = ((c, find_bad_handles(c.written, surnames)) for c in candidates)
+    return [(c, bad) for c, bad in hits if bad]
+
+
 def rank(
     candidates: Iterable[Candidate],
     census: Mapping[str, int],
     weights: Mapping[str, float],
     ascii_only: bool = False,
+    surnames: list[str] | None = None,
 ) -> list[ScoredName]:
-    pool = [c for c in candidates if not ascii_only or ascii_score(c.written)]
+    candidates = list(candidates)
+    excluded = {c.key for c, _ in excluded_by_handles(candidates, surnames)} if surnames else set()
+    pool = [
+        c
+        for c in candidates
+        if c.key not in excluded and (not ascii_only or ascii_score(c.written))
+    ]
     if not pool:
         return []
 
