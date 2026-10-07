@@ -123,9 +123,23 @@ def test_name_entry_shape():
     first = rank(top=1).json()["names"][0]
 
     assert set(first) == {
-        "rank", "name", "total", "criteria", "syllables", "stress", "census_frequency", "births",
+        "rank",
+        "name",
+        "total",
+        "criteria",
+        "syllables",
+        "stress",
+        "census_frequency",
+        "births",
     }
-    assert set(first["criteria"]) == {"anonymity", "ascii", "song", "spelling", "current", "systems"}
+    assert set(first["criteria"]) == {
+        "anonymity",
+        "ascii",
+        "song",
+        "spelling",
+        "current",
+        "systems",
+    }
     assert first["total"] == round(first["total"], 3)
 
 
@@ -133,7 +147,9 @@ def test_surname_excludes_gala_for_gordo_and_is_not_cached():
     res = rank(surname1="Ordo")
     gala = next(e for e in res.json()["excluded"] if e["name"] == "Gala")
 
-    assert {"handle": "gordo", "pattern": "n[0] + s1", "word": "gordo", "tier": "negative"} in gala["reasons"]
+    assert {"handle": "gordo", "pattern": "n[0] + s1", "word": "gordo", "tier": "negative"} in gala[
+        "reasons"
+    ]
     assert "Gala" not in {n["name"] for n in res.json()["names"]}
     assert res.headers["cache-control"] == "no-store"
 
@@ -219,7 +235,9 @@ def test_frontend_reads_only_fields_the_api_returns():
     js = APP_JS.read_text(encoding="utf-8")
 
     for field in [f for fields in reads.values() for f in fields] + list(reads):
-        assert re.search(rf"\.{field}\b", js), f"app.js no longer reads .{field}; update the contract"
+        assert re.search(rf"\.{field}\b", js), (
+            f"app.js no longer reads .{field}; update the contract"
+        )
     assert all(set(reads["names"]) <= set(n) for n in body["names"])
     assert all(set(reads["excluded"]) <= set(e) for e in body["excluded"])
     assert all(set(reads["reasons"]) <= set(r) for e in body["excluded"] for r in e["reasons"])
@@ -313,9 +331,7 @@ def get_rank(
     ascii_only: bool = False,
 ) -> dict[str, Any]:
     surnames = [
-        s
-        for s in (_clean_surname("surname1", surname1), _clean_surname("surname2", surname2))
-        if s
+        s for s in (_clean_surname("surname1", surname1), _clean_surname("surname2", surname2)) if s
     ]
     candidates, census = _load_data()
     ranked = rank(candidates, census, DEFAULT_WEIGHTS, ascii_only, surnames or None)
@@ -386,7 +402,7 @@ def get_rank(
 ```python
 """Local preview: API + static frontend on one port. Not used on Vercel.
 
-    uv run uvicorn serve_local:app --app-dir scripts --reload
+uv run uvicorn serve_local:app --app-dir scripts --reload
 """
 
 from pathlib import Path
