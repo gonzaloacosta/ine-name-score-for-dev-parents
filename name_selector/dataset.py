@@ -4,30 +4,33 @@ import csv
 from collections import defaultdict
 from pathlib import Path
 
-from name_selector.ine import BIRTHS_CSV, CENSUS_CSV
+from name_selector.ine import births_csv, census_csv
 from name_selector.lexicon import spelling_for
-from name_selector.models import Candidate
+from name_selector.models import Candidate, Sex
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 
-def load(data_dir: Path = DEFAULT_DATA_DIR) -> tuple[list[Candidate], dict[str, int]]:
+def load(
+    data_dir: Path = DEFAULT_DATA_DIR,
+    sex: Sex = Sex.FEMALE,
+) -> tuple[list[Candidate], dict[str, int]]:
     """Candidates are names in any year's top-100 births; census covers every name."""
     census: dict[str, int] = {}
     ages: dict[str, float] = {}
-    with open(data_dir / CENSUS_CSV, encoding="utf-8") as f:
+    with open(data_dir / census_csv(sex), encoding="utf-8") as f:
         for row in csv.DictReader(f):
             census[row["name"]] = int(row["frequency"])
             ages[row["name"]] = float(row["mean_age"])
 
     births: dict[str, dict[int, int]] = defaultdict(dict)
-    with open(data_dir / BIRTHS_CSV, encoding="utf-8") as f:
+    with open(data_dir / births_csv(sex), encoding="utf-8") as f:
         for row in csv.DictReader(f):
             births[row["name"]][int(row["year"])] = int(row["births"])
 
     candidates = []
     for key, by_year in sorted(births.items()):
-        spelling = spelling_for(key)
+        spelling = spelling_for(key, sex)
         candidates.append(
             Candidate(
                 key=key,
