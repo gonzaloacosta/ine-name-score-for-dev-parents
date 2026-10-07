@@ -33,6 +33,25 @@ export default {
     if (upstream.origin !== new URL(env.ORIGIN).origin) {
       return new Response("Bad request", { status: 400 });
     }
-    return fetch(upstream, { method: request.method, headers, redirect: "manual" });
+    const response = await fetch(upstream, { method: request.method, headers, redirect: "manual" });
+    return keepRedirectUnderPrefix(response, env.ORIGIN);
   },
 };
+
+// Origin redirects point at the origin's root ("/x" or "https://<origin>/x"); without the
+// prefix the browser would land on GitHub Pages. Other hosts and relative URLs pass through.
+function keepRedirectUnderPrefix(response, origin) {
+  const location = response.headers.get("Location");
+  if (!location) return response;
+  let path = null;
+  if (location.startsWith("/") && !location.startsWith("//")) {
+    path = location;
+  } else if (/^https?:\/\//i.test(location)) {
+    const target = new URL(location);
+    if (target.origin === new URL(origin).origin) path = target.pathname + target.search + target.hash;
+  }
+  if (path === null) return response;
+  const rewritten = new Response(response.body, response);
+  rewritten.headers.set("Location", PREFIX + path);
+  return rewritten;
+}

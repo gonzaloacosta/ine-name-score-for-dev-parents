@@ -6,11 +6,11 @@ import worker from "./worker.js";
 
 const ORIGIN = "https://origin.example";
 
-async function proxied(path, init = {}) {
+async function proxied(path, init = {}, upstreamResponse = () => new Response("ok")) {
   const calls = [];
   globalThis.fetch = async (url, options) => {
     calls.push({ url: String(url), options });
-    return new Response("ok");
+    return upstreamResponse();
   };
   const response = await worker.fetch(new Request(`https://gonzaloacosta.me${path}`, init), { ORIGIN });
   return { response, calls };
@@ -47,4 +47,20 @@ test("forwards only Accept and Accept-Language", async () => {
   const headers = calls[0].options.headers;
   assert.equal(headers.get("Accept"), "text/html");
   assert.equal(headers.get("Cookie"), null);
+});
+
+test("keeps origin redirects under the prefix", async () => {
+  const cases = [
+    ["/example.com/", "/name-score/example.com/"],  // Vercel's double-slash cleanup
+    ["https://origin.example/nombre.html?x=1", "/name-score/nombre.html?x=1"],
+    ["https://elsewhere.example/", "https://elsewhere.example/"],  // other hosts untouched
+    ["nombre.html", "nombre.html"],  // relative stays relative
+  ];
+  for (const [location, expected] of cases) {
+    const { response } = await proxied("/name-score//x", {}, () =>
+      new Response(null, { status: 308, headers: { Location: location } }),
+    );
+    assert.equal(response.status, 308);
+    assert.equal(response.headers.get("Location"), expected, location);
+  }
 });
