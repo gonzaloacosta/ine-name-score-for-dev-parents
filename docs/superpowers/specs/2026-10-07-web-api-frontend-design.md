@@ -1,6 +1,6 @@
 # Web API + frontend on Vercel — design
 
-Date: 2026-10-07 · Status: draft for review
+Date: 2026-10-07 · Status: approved, implemented
 
 ## 1. Goal
 
@@ -52,7 +52,7 @@ unchanged. Data is loaded once per warm function instance (`functools.cache`).
 | Param | Type | Default | Validation |
 |---|---|---|---|
 | `surname1` | string | none | optional; 1–40 chars; Unicode letters, space, `-`, `'` only |
-| `surname2` | string | none | same as `surname1`; ignored if `surname1` is absent |
+| `surname2` | string | none | same as `surname1`; used as the only surname if `surname1` is absent |
 | `top` | int | 20 | 1–200; returns all names if the pool (105 today) is smaller |
 | `ascii_only` | bool | false | |
 
@@ -145,6 +145,9 @@ no build step.
 | `--navy` | `#1F2544` | text, button text |
 | bar gradient | `#8EC5F0 → #C3A8EE → #F4A9C4` | score bars |
 
+Hero name text uses a deeper gradient of the same hues, `#3F7FC9 → #7A55C7 → #C9507E`
+(≥ 3.3:1 on every cloud; the pastel bar gradient measured 1.5–2:1 and failed WCAG AA).
+
 Glass cards: `rgba(255,255,255,.62)` + `backdrop-filter: blur(10px)` + white 1px border.
 Cloud blobs drift slowly; animation disabled under `prefers-reduced-motion`.
 Button text is navy (≈7:1 on coral), not white (≈2:1, fails WCAG AA). Light theme only.
@@ -178,9 +181,11 @@ CI green   → auto-merge to main (existing) → Vercel production deploy
 ```
 
 **Post-deploy smoke check:** new workflow `.github/workflows/smoke.yml` on the
-`deployment_status` event (state `success`). It requests `/api/health` and `/api/rank` on the
-deployed `environment_url` and fails if either is not 200 with the expected JSON keys.
-Read-only token, no secrets. Not a required check in branch protection (deploy timing is
+`deployment_status` event (state `success`, environment `Production`). It requests
+`/api/health`, `/api/rank` and `/` on the production domain (repo variable `PRODUCTION_URL`,
+default `https://ine-name-score-for-dev-parents.vercel.app`). Preview URLs are not checked by CI:
+Vercel Deployment Protection answers them with 401 and the design keeps no bypass secret.
+No token permissions, no secrets. Not a required check in branch protection (deploy timing is
 independent of CI).
 
 **Known first-deploy state:** the initial import build failed with
@@ -197,7 +202,8 @@ independent of CI).
   - cache headers: `public, s-maxage…` without surnames, `no-store` with surnames;
   - `/api/health` → `{"status": "ok"}`;
   - contract test: response keys equal the set `public/app.js` reads (listed in the test).
-- Existing CI runs the new tests on Python 3.11–3.13; `httpx` added to the dev group.
+- Existing CI runs the new tests on Python 3.11–3.13; `httpx2` (Starlette's test-client
+  transport) added to the dev group.
 - Manual check before merge: real page in a browser at desktop and 375px widths, both
   languages, surname filter, error state (API stopped).
 - After merge: smoke workflow on the preview and production URLs.
