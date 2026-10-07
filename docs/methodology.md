@@ -22,6 +22,25 @@ of 2–3 syllables ending in a vowel (*JU-lia*, *Mar-TI-na*).
 `phonetics.phonetic_key` merges spellings Spanish speakers can't tell apart: b/v, silent h,
 y/i/ll, seseo (c/z/s), c/k/qu, g/j before e/i, doubled letters, ph/th/sh.
 
+## Email / username filter (`--surnames`)
+
+Not a weighted criterion but a hard filter: a name is dropped when any generated handle
+spells a listed word. Handles are lowercase a–z (accents and ñ stripped, separators dropped
+because `ana.lopez` still reads `analopez`) built from these patterns, with n = name,
+s1/s2 = surnames:
+
+`n+s1`, `n[0]+s1`, `n+s1[0]`, `s1+n`, `s1+n[0]` and, with two surnames, `n+s1+s2`,
+`n[0]+s1+s2`, `n[0]+s1+s2[0]`, `n+s2`, initials.
+
+Words live in `name_selector/wordlists/` (Spanish + English, one per line):
+
+- `offensive.txt`: flagged anywhere, if the match touches the name (`ana|lopez` -> anal).
+- `negative.txt`: teasing words, flagged only at the start/end of the handle and only when
+  the combination creates them (`g|ordo` -> gordo) or they are the whole name. Fátima is not
+  flagged for "fat".
+
+Words entirely inside a surname are ignored: they affect every name equally.
+
 ## Known limitations
 
 - INE publishes names without accents, so `lexicon.py` stores the correct spelling for
@@ -29,5 +48,7 @@ y/i/ll, seseo (c/z/s), c/k/qu, g/j before e/i, doubled letters, ph/th/sh.
   misread it (Mia → Mía, Chloe → Cloe). New names from future years may need entries there.
 - `anonymity` and `current` are relative to the pool, so `--ascii-only` shifts them slightly.
 - Only the national top-100 per year is published, so names outside it are not candidates.
+- The word lists are curated, not exhaustive: extend them for your own surnames' risks.
+  Leetspeak and phonetic matches (`kaka`) are not detected.
 - Real-world findability depends mostly on the full name with both surnames, which this tool
   cannot see.
