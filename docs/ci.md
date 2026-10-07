@@ -43,5 +43,5 @@ Previews are not curled: Vercel Deployment Protection puts preview and per-deplo
 behind a Vercel login (401), and we keep no bypass secret in GitHub. Open the preview link on
 the PR while logged in to Vercel to check it.
 
-The production URL defaults to `https://ine-name-score-for-dev-parents.vercel.app`; override it
+The production URL defaults to `https://name-score.vercel.app`; override it
 with the repository variable `PRODUCTION_URL` if you add a custom domain.

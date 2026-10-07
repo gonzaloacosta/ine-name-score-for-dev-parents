@@ -35,3 +35,28 @@ def test_repo_links_use_the_new_name():
         html = (PUBLIC / page).read_text(encoding="utf-8")
         assert "github.com/gonzaloacosta/name-score" in html
         assert "ine-name-score-for-dev-parents" not in html
+
+
+OLD_VERCEL_DOMAIN = "ine-name-score-for-dev-parents.vercel.app"  # now a 307 to the new domain
+ROOT = PUBLIC.parent
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ".github/workflows/smoke.yml",
+        "deploy/cloudflare-worker/wrangler.toml",
+        "README.md",
+        "docs/ci.md",
+        "docs/deployment.md",
+    ],
+)
+def test_deploy_config_points_at_the_current_vercel_domain(path):
+    """The Worker and the smoke check must not follow the old domain's redirect."""
+    assert OLD_VERCEL_DOMAIN not in (ROOT / path).read_text(encoding="utf-8")
+
+
+def test_worker_origin_is_the_current_vercel_domain():
+    wrangler = (ROOT / "deploy/cloudflare-worker/wrangler.toml").read_text(encoding="utf-8")
+
+    assert 'ORIGIN = "https://name-score.vercel.app"' in wrangler
