@@ -22,6 +22,8 @@ Code: [`deploy/cloudflare-worker/worker.js`](../deploy/cloudflare-worker/worker.
   like `/name-score//evil.example/x` cannot turn the Worker into an open proxy.
 - Tests: `node --test deploy/cloudflare-worker/worker.test.mjs` (also run by pytest/CI).
 - Vercel's response headers (CSP, `Cache-Control`) pass through unchanged.
+- Redirects from the origin (`Location: /x` or `https://<origin>/x`) are rewritten to
+  `/name-score/x`, so they never drop visitors on GitHub Pages.
 
 Deploy (needs a Cloudflare login with Workers permissions on the account):
 

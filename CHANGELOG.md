@@ -16,6 +16,8 @@
 ### Security
 - Worker: protocol-relative paths (`/name-score//host/x`) could reach other hosts (open
   proxy). Fixed before the first deploy; covered by Node tests run in CI.
+- Worker: origin redirects are rewritten under `/name-score/` instead of escaping to the
+  domain root.
 
 ## 0.4.0 - 2026-10-07
 
