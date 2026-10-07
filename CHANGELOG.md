@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 - 2026-10-07
+
+### Added
+- Boys' names: INE census (`Hombres`) and births (boys' columns), boys' spelling lexicon,
+  `sex` parameter on the API, `--sex` on the CLI, Niña/Niño toggle on the web (`?sexo=nino`).
+- Score any name, not only the top 100: `explain()` / `name-selector explain` /
+  `GET /api/explain`, measured against the newborn pool.
+- Web score page (`/nombre.html`): opened from any name in the list or from the new
+  "¿Ya tenéis un nombre en mente?" field; shows each criterion, INE figures and the
+  emails/usernames for the family's surnames.
+
+### Changed
+- Tagline now states that names are safe, easy to pair with surnames and free of joke-prone
+  email combinations.
+
 ## 0.3.0 - 2026-10-07
 
 ### Added

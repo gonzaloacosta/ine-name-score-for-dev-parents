@@ -140,8 +140,20 @@ def test_unexpected_error_is_generic_500(monkeypatch):
     assert res.json() == {"detail": "internal error"}
 
 
+def frontend_js() -> str:
+    return "\n".join(f.read_text(encoding="utf-8") for f in sorted(APP_JS.parent.glob("*.js")))
+
+
+def assert_js_reads(fields):
+    js = frontend_js()
+    for field in fields:
+        assert re.search(rf"\.{field}\b", js), (
+            f"public/*.js no longer reads .{field}; update the contract"
+        )
+
+
 def test_frontend_reads_only_fields_the_api_returns():
-    """Contract: every API field app.js reads must exist in a real response."""
+    """Contract: every /api/rank field the list page reads exists in a real response."""
     body = rank(surname1="Ordo").json()
     reads = {
         "names": ["rank", "name", "total"],
@@ -149,16 +161,38 @@ def test_frontend_reads_only_fields_the_api_returns():
         "reasons": ["handle", "word"],
         "data": ["census_date", "birth_years"],
     }
-    js = APP_JS.read_text(encoding="utf-8")
 
-    for field in [f for fields in reads.values() for f in fields] + list(reads):
-        assert re.search(rf"\.{field}\b", js), (
-            f"app.js no longer reads .{field}; update the contract"
-        )
+    assert_js_reads([f for fields in reads.values() for f in fields] + list(reads))
     assert all(set(reads["names"]) <= set(n) for n in body["names"])
     assert all(set(reads["excluded"]) <= set(e) for e in body["excluded"])
     assert all(set(reads["reasons"]) <= set(r) for e in body["excluded"] for r in e["reasons"])
     assert set(reads["data"]) <= set(body["data"])
+
+
+def test_name_page_reads_only_fields_explain_returns():
+    """Contract: every /api/explain field name.js reads exists in a real response."""
+    body = client.get("/api/explain", params={"name": "Gala", "surname1": "Ordo"}).json()
+    top_level = [
+        "name",
+        "total",
+        "rank",
+        "pool_size",
+        "criteria",
+        "births",
+        "in_census",
+        "census_frequency",
+        "census_mean_age",
+        "syllables",
+        "stress",
+        "handles",
+        "excluded",
+        "data",
+    ]
+    handle_fields = ["handle", "word"]
+
+    assert_js_reads(top_level + handle_fields)
+    assert set(top_level) <= set(body)
+    assert all(set(handle_fields) <= set(h) for h in body["handles"])
 
 
 # Final review fixes

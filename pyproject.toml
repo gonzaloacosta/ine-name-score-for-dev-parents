@@ -1,6 +1,6 @@
 [project]
 name = "name-selector"
-version = "0.3.0"
+version = "0.4.0"
 description = "Rank Spanish girls' names by infosec-friendliness, commonness and 'Cumpleaños feliz' fit, using INE data."
 readme = "README.md"
 requires-python = ">=3.11"
