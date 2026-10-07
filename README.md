@@ -1,6 +1,6 @@
-# name-selector
+# name-score
 
-[![CI](https://github.com/gonzaloacosta/ine-name-score-for-dev-parents/actions/workflows/ci.yml/badge.svg)](https://github.com/gonzaloacosta/ine-name-score-for-dev-parents/actions/workflows/ci.yml)
+[![CI](https://github.com/gonzaloacosta/name-score/actions/workflows/ci.yml/badge.svg)](https://github.com/gonzaloacosta/name-score/actions/workflows/ci.yml)
 
 Ranks Spanish girls' and boys' names on four things at once:
 
@@ -52,7 +52,9 @@ uv run uvicorn serve_local:app --app-dir scripts --reload   # http://127.0.0.1:8
 ```
 
 Hosting: Vercel Hobby, deployed by Vercel's GitHub app on every merge to `main` (previews per
-PR). Design and decisions: [docs/superpowers/specs/2026-10-07-web-api-frontend-design.md](docs/superpowers/specs/2026-10-07-web-api-frontend-design.md).
+PR). A Cloudflare Worker can also serve it under `gonzaloacosta.me/name-score/`; the site uses
+relative URLs so it works at a domain root or under a path prefix. See
+[docs/deployment.md](docs/deployment.md). Design and decisions: [docs/superpowers/specs/2026-10-07-web-api-frontend-design.md](docs/superpowers/specs/2026-10-07-web-api-frontend-design.md).
 
 ## CLI
 

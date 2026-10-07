@@ -11,7 +11,7 @@ import {
   state,
   strings,
   t,
-} from "/common.js";
+} from "./common.js";
 
 const CRITERIA = ["anonymity", "ascii", "song", "spelling", "current", "systems"];
 
@@ -104,7 +104,7 @@ async function load() {
   const params = new URLSearchParams({ name: requested, sex: state.sex });
   surnames.forEach((surname, i) => params.set(`surname${i + 1}`, surname));
   try {
-    const response = await fetch(`/api/explain?${params}`, { headers: { Accept: "application/json" } });
+    const response = await fetch(`api/explain?${params}`, { headers: { Accept: "application/json" } });
     if (response.status === 422) {
       failure = "invalidName";
       renderFailure();

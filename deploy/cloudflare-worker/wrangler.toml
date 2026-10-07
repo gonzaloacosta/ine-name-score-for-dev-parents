@@ -1,0 +1,15 @@
+# Cloudflare Worker that serves the app at https://gonzaloacosta.me/name-score/
+#   npx wrangler login            # once, opens the browser
+#   npx wrangler deploy           # from this directory
+#   npx wrangler dev --var ORIGIN:http://127.0.0.1:8000   # local test against serve_local
+name = "name-score"
+main = "worker.js"
+compatibility_date = "2025-09-01"
+
+routes = [
+  { pattern = "gonzaloacosta.me/name-score", zone_name = "gonzaloacosta.me" },
+  { pattern = "gonzaloacosta.me/name-score/*", zone_name = "gonzaloacosta.me" },
+]
+
+[vars]
+ORIGIN = "https://ine-name-score-for-dev-parents.vercel.app"
