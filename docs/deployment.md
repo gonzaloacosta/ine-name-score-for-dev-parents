@@ -18,6 +18,9 @@ Code: [`deploy/cloudflare-worker/worker.js`](../deploy/cloudflare-worker/worker.
 - `/name-score` → 301 to `/name-score/` (relative URLs resolve against the directory).
 - Strips the prefix and fetches the same path from `ORIGIN` (the Vercel URL).
 - GET/HEAD only (405 otherwise); forwards only `Accept` and `Accept-Language`.
+- The path is assigned onto the origin URL, never resolved as a relative reference: a path
+  like `/name-score//evil.example/x` cannot turn the Worker into an open proxy.
+- Tests: `node --test deploy/cloudflare-worker/worker.test.mjs` (also run by pytest/CI).
 - Vercel's response headers (CSP, `Cache-Control`) pass through unchanged.
 
 Deploy (needs a Cloudflare login with Workers permissions on the account):

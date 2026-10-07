@@ -25,7 +25,14 @@ export default {
       const value = request.headers.get(name);
       if (value) headers.set(name, value);
     }
-    const upstream = new URL(url.pathname.slice(PREFIX.length) + url.search, env.ORIGIN);
+    // Assign the path onto the origin URL: never resolve it as a relative reference, or a
+    // path like "//evil.example/x" would be protocol-relative and leave the origin host.
+    const upstream = new URL(env.ORIGIN);
+    upstream.pathname = url.pathname.slice(PREFIX.length);
+    upstream.search = url.search;
+    if (upstream.origin !== new URL(env.ORIGIN).origin) {
+      return new Response("Bad request", { status: 400 });
+    }
     return fetch(upstream, { method: request.method, headers, redirect: "manual" });
   },
 };

@@ -10,6 +10,10 @@
 - Cloudflare Worker (`deploy/cloudflare-worker/`) serving the app at
   `gonzaloacosta.me/name-score/`; tested locally with `wrangler dev` (82/82 browser checks).
 
+### Security
+- Worker: protocol-relative paths (`/name-score//host/x`) could reach other hosts (open
+  proxy). Fixed before the first deploy; covered by Node tests run in CI.
+
 ## 0.4.0 - 2026-10-07
 
 ### Added
