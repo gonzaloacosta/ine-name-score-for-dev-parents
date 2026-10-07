@@ -4,10 +4,11 @@ import math
 import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 
 from name_selector.handles import BadHandle, find_bad_handles
 from name_selector.models import Candidate, ScoredName
-from name_selector.phonetics import Stress, Syllabification, phonetic_key, syllabify
+from name_selector.phonetics import Stress, Syllabification, phonetic_key, strip_accents, syllabify
 
 DEFAULT_WEIGHTS: dict[str, float] = {
     "anonymity": 0.25,  # many namesakes -> hard to single out via OSINT
@@ -112,6 +113,43 @@ def excluded_by_handles(
     return [(c, bad) for c, bad in hits if bad]
 
 
+@dataclass(frozen=True)
+class _Ranges:
+    """Min/max of census frequency and births over a pool: the scale for log_scale()."""
+
+    freq: tuple[float, float]
+    births: tuple[float, float]
+
+    @classmethod
+    def of(cls, pool: list[Candidate]) -> "_Ranges":
+        freqs = [max(c.census_frequency, 1) for c in pool]
+        births = [max(c.mean_births, 1) for c in pool]
+        return cls((min(freqs), max(freqs)), (min(births), max(births)))
+
+
+def _score(
+    c: Candidate,
+    census: Mapping[str, int],
+    sound_totals: Mapping[str, int],
+    ranges: _Ranges,
+    weights: Mapping[str, float],
+) -> ScoredName:
+    syllables = syllabify(c.pronunciation)
+    criteria = {
+        # Names outside the pool can fall below its minimum: score 0, never negative.
+        "anonymity": log_scale(max(c.census_frequency, 1), *ranges.freq)
+        if c.census_frequency
+        else 0.0,
+        "ascii": ascii_score(c.written),
+        "song": song_score(syllables),
+        "spelling": spelling_score(c.key, census, sound_totals),
+        "current": log_scale(max(c.mean_births, 1), *ranges.births) if c.births else 0.0,
+        "systems": systems_score(c.written),
+    }
+    total = sum(weights[k] * v for k, v in criteria.items()) / sum(weights.values())
+    return ScoredName(c, syllables, criteria, total)
+
+
 def rank(
     candidates: Iterable[Candidate],
     census: Mapping[str, int],
@@ -130,22 +168,48 @@ def rank(
         return []
 
     sound_totals = _sound_totals(census)
-    freqs = [max(c.census_frequency, 1) for c in pool]
-    births = [max(c.mean_births, 1) for c in pool]
-    total_weight = sum(weights.values())
-
-    scored = []
-    for c in pool:
-        syllables = syllabify(c.pronunciation)
-        criteria = {
-            "anonymity": log_scale(max(c.census_frequency, 1), min(freqs), max(freqs)),
-            "ascii": ascii_score(c.written),
-            "song": song_score(syllables),
-            "spelling": spelling_score(c.key, census, sound_totals),
-            "current": log_scale(max(c.mean_births, 1), min(births), max(births)),
-            "systems": systems_score(c.written),
-        }
-        total = sum(weights[k] * v for k, v in criteria.items()) / total_weight
-        scored.append(ScoredName(c, syllables, criteria, total))
-
+    ranges = _Ranges.of(pool)
+    scored = [_score(c, census, sound_totals, ranges, weights) for c in pool]
     return sorted(scored, key=lambda s: (-s.total, s.candidate.key))
+
+
+@dataclass(frozen=True)
+class Explanation:
+    scored: ScoredName
+    position: int | None  # place in the default ranking; None when outside the top-100 pool
+    pool_size: int
+    in_census: bool
+
+
+def name_key(name: str) -> str:
+    """INE form of a typed name: uppercase, no accents, single spaces."""
+    return " ".join(strip_accents(name).upper().split())
+
+
+def explain(
+    name: str,
+    candidates: Iterable[Candidate],
+    census: Mapping[str, int],
+    weights: Mapping[str, float],
+    ages: Mapping[str, float] | None = None,
+) -> Explanation:
+    """Score any name. Pool names reuse their ranking entry; others use the typed spelling
+    and are measured on the same scale as the pool."""
+    candidates = list(candidates)
+    key = name_key(name)
+    ranked = rank(candidates, census, weights)
+    for position, scored in enumerate(ranked, start=1):
+        if scored.candidate.key == key:
+            return Explanation(scored, position, len(ranked), key in census)
+
+    written = " ".join(word[:1].upper() + word[1:].lower() for word in name.split())
+    candidate = Candidate(
+        key=key,
+        written=written,
+        pronunciation=written,
+        census_frequency=census.get(key, 0),
+        census_mean_age=(ages or {}).get(key),
+        births={},
+    )
+    scored = _score(candidate, census, _sound_totals(census), _Ranges.of(candidates), weights)
+    return Explanation(scored, None, len(ranked), key in census)

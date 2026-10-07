@@ -11,17 +11,27 @@ from name_selector.models import Candidate, Sex
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 
-def load(
-    data_dir: Path = DEFAULT_DATA_DIR,
-    sex: Sex = Sex.FEMALE,
-) -> tuple[list[Candidate], dict[str, int]]:
-    """Candidates are names in any year's top-100 births; census covers every name."""
+def _read_census(data_dir: Path, sex: Sex) -> tuple[dict[str, int], dict[str, float]]:
     census: dict[str, int] = {}
     ages: dict[str, float] = {}
     with open(data_dir / census_csv(sex), encoding="utf-8") as f:
         for row in csv.DictReader(f):
             census[row["name"]] = int(row["frequency"])
             ages[row["name"]] = float(row["mean_age"])
+    return census, ages
+
+
+def load_ages(data_dir: Path = DEFAULT_DATA_DIR, sex: Sex = Sex.FEMALE) -> dict[str, float]:
+    """Mean age of everyone holding each name (for names outside the newborn pool)."""
+    return _read_census(data_dir, sex)[1]
+
+
+def load(
+    data_dir: Path = DEFAULT_DATA_DIR,
+    sex: Sex = Sex.FEMALE,
+) -> tuple[list[Candidate], dict[str, int]]:
+    """Candidates are names in any year's top-100 births; census covers every name."""
+    census, ages = _read_census(data_dir, sex)
 
     births: dict[str, dict[int, int]] = defaultdict(dict)
     with open(data_dir / births_csv(sex), encoding="utf-8") as f:
