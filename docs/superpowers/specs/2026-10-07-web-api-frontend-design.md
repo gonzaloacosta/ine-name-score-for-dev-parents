@@ -146,7 +146,8 @@ no build step.
 | bar gradient | `#8EC5F0 → #C3A8EE → #F4A9C4` | score bars |
 
 Hero name text uses a deeper gradient of the same hues, `#3F7FC9 → #7A55C7 → #C9507E`
-(≥ 3.3:1 on every cloud; the pastel bar gradient measured 1.5–2:1 and failed WCAG AA).
+(≥ 3:1 even against the raw, unblurred cloud colours, worst case 3.01:1 on lilac; the pastel
+bar gradient measured 1.5–2:1 and failed WCAG AA for large text).
 
 Glass cards: `rgba(255,255,255,.62)` + `backdrop-filter: blur(10px)` + white 1px border.
 Cloud blobs drift slowly; animation disabled under `prefers-reduced-motion`.
@@ -206,7 +207,7 @@ independent of CI).
   transport) added to the dev group.
 - Manual check before merge: real page in a browser at desktop and 375px widths, both
   languages, surname filter, error state (API stopped).
-- After merge: smoke workflow on the preview and production URLs.
+- After merge: smoke workflow on the production URL (previews are checked by hand, see §5).
 
 ## 7. Risks
 

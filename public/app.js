@@ -158,8 +158,10 @@ function renderExcluded(excluded) {
 
 function render(body) {
   results.setAttribute("aria-busy", "false");
-  status.replaceChildren();
-  if (!body.names.length) {
+  if (body.names.length) {
+    // #status is a live region: screen readers hear the outcome of every search.
+    status.replaceChildren(el("p", "summary hint", t("summary", body.names.length, body.excluded.length)));
+  } else {
     const box = el("div", "notice glass");
     box.append(el("p", "", t("empty")));
     status.replaceChildren(box);

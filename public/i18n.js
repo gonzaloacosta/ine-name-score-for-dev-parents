@@ -16,6 +16,8 @@ export const STRINGS = {
     tapHint: "Toca un nombre para cantarlo.",
     scoreLabel: (score) => `Puntuación ${score} de 100`,
     excludedTitle: (n) => (n === 1 ? "1 nombre descartado por su email" : `${n} nombres descartados por su email`),
+    summary: (shown, dropped) =>
+      dropped ? `${shown} nombres recomendados y ${dropped} descartados por su email.` : `${shown} nombres recomendados.`,
     error: "No hemos podido cargar los nombres.",
     retry: "Reintentar",
     invalid: "Revisa los apellidos: solo letras, espacios, guion o apóstrofo, y como máximo 40 caracteres.",
@@ -39,6 +41,8 @@ export const STRINGS = {
     tapHint: "Tap a name to sing it.",
     scoreLabel: (score) => `Score ${score} out of 100`,
     excludedTitle: (n) => (n === 1 ? "1 name dropped because of its email" : `${n} names dropped because of their email`),
+    summary: (shown, dropped) =>
+      dropped ? `${shown} recommended names and ${dropped} dropped because of their email.` : `${shown} recommended names.`,
     error: "The names could not be loaded.",
     retry: "Try again",
     invalid: "Check the surnames: letters, spaces, hyphen or apostrophe only, 40 characters at most.",

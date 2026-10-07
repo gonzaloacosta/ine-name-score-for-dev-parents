@@ -2,6 +2,7 @@
 
 import logging
 import re
+import unicodedata
 from functools import cache
 from typing import Annotated, Any
 
@@ -20,6 +21,8 @@ MAX_SURNAME_LENGTH = 40
 # Unicode letters, words joined by a single space, hyphen or apostrophe ("de la Fuente", "O'Neill").
 SURNAME_RE = re.compile(r"[^\W\d_]+(?:[ '\-][^\W\d_]+)*")
 PUBLIC_CACHE = "public, s-maxage=86400, stale-while-revalidate=604800"
+# Typographic apostrophes (iOS types ’ by default) count as a plain apostrophe.
+APOSTROPHES = str.maketrans({"\u2019": "'", "\u2018": "'", "\u02bc": "'"})
 
 app = FastAPI(title="name-selector", docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -30,7 +33,8 @@ def _load_data() -> tuple[list[Candidate], dict[str, int]]:
 
 
 def _clean_surname(field: str, value: str | None) -> str | None:
-    value = (value or "").strip()
+    # NFC: "n" + combining tilde (pasted on macOS) becomes "ñ"; then collapse whitespace.
+    value = " ".join(unicodedata.normalize("NFC", value or "").translate(APOSTROPHES).split())
     if not value:
         return None
     if len(value) > MAX_SURNAME_LENGTH or not SURNAME_RE.fullmatch(value):

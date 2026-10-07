@@ -1,4 +1,5 @@
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -158,3 +159,43 @@ def test_frontend_reads_only_fields_the_api_returns():
     assert all(set(reads["excluded"]) <= set(e) for e in body["excluded"])
     assert all(set(reads["reasons"]) <= set(r) for e in body["excluded"] for r in e["reasons"])
     assert set(reads["data"]) <= set(body["data"])
+
+
+# Final review fixes
+@pytest.mark.parametrize(
+    "surname",
+    [
+        "O’Neill",  # iOS smart apostrophe
+        "Peña",  # decomposed ñ (NFD), e.g. pasted on macOS
+        "de  la   Fuente",  # repeated spaces
+    ],
+)
+def test_real_world_surname_spellings_are_accepted(surname):
+    assert rank(surname1=surname).status_code == 200
+
+
+def test_decomposed_enye_matches_composed_enye():
+    composed = rank(surname1="Ocaña").json()["excluded"]
+    decomposed = rank(surname1="Ocaña").json()["excluded"]
+
+    assert decomposed == composed
+
+
+def test_submit_button_is_disabled_until_app_js_enables_it():
+    """A native form GET before app.js loads would put surnames in the URL."""
+    html = (APP_JS.parent / "index.html").read_text(encoding="utf-8")
+
+    assert re.search(r'<button type="submit"[^>]*\bdisabled\b', html)
+    assert "submitButton.disabled = false" in APP_JS.read_text(encoding="utf-8")
+
+
+def test_python_version_pin_is_tracked_for_vercel():
+    tracked = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", ".python-version"],
+        cwd=APP_JS.parent.parent,
+        capture_output=True,
+    )
+
+    assert tracked.returncode == 0, (
+        ".python-version is not committed; Vercel would use its default Python"
+    )

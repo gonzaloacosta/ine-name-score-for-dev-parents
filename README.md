@@ -19,8 +19,8 @@ All data comes from the [INE](https://www.ine.es/daco/daco42/nombyapel/nombyapel
 
 **https://ine-name-score-for-dev-parents.vercel.app** (Spanish / English).
 
-Type both surnames to drop names whose future email would read badly; tap a name to hear how
-it fits in "Cumpleaños feliz". The page calls a small JSON API on the same domain:
+Type both surnames to drop names whose future email would read badly; tap a name to place it
+in the "Cumpleaños feliz" line at the top of the page. The page calls a small JSON API on the same domain:
 
 ```bash
 curl "https://ine-name-score-for-dev-parents.vercel.app/api/rank?top=5&surname1=Ordo&surname2=L%C3%B3pez"

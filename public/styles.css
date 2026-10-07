@@ -16,7 +16,7 @@
   --navy: #1f2544;
   --navy-soft: #4a5072;
   --bar: linear-gradient(90deg, #8ec5f0, #c3a8ee, #f4a9c4);
-  /* Same hues, deep enough for >= 3.3:1 on the clouds (large text, WCAG AA). */
+  /* Same hues, deep enough for >= 3:1 on the clouds (large text, WCAG AA). */
   --name-ink: linear-gradient(90deg, #3f7fc9, #7a55c7, #c9507e);
   --glass: rgba(255, 255, 255, 0.62);
   --glass-edge: rgba(255, 255, 255, 0.9);
@@ -282,6 +282,11 @@ body {
   background: #b9a3ea;
 }
 
+.switch input:focus-visible + .track {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
 .switch input:checked + .track::after {
   transform: translateX(16px);
 }
@@ -420,6 +425,10 @@ body {
 /* Status: errors and empty states */
 #status:empty {
   display: none;
+}
+
+.summary {
+  margin: 0 0 10px;
 }
 
 .notice {
