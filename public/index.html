@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Elige el nombre de tu hija</title>
+    <meta name="description" content="Nombres de niña habituales en España, seguros en cualquier sistema y que encajan en el Cumpleaños feliz." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="sky" aria-hidden="true"><span class="cloud cloud-sky"></span><span class="cloud cloud-pink"></span><span class="cloud cloud-lilac"></span></div>
+
+    <main class="page">
+      <nav class="lang" aria-label="Idioma / Language">
+        <button type="button" data-lang="es" aria-pressed="true">ES</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </nav>
+
+      <header class="hero">
+        <h1 class="heading" data-i18n="heading">Elige un nombre para tu hija</h1>
+        <p class="song" aria-live="polite">
+          <span class="song-line" data-i18n="songLine">Cumpleaños feliz, querida</span>
+          <span class="song-name" id="song-name">Paula</span>
+        </p>
+        <p class="tagline" data-i18n="tagline">
+          Nombres de niña habituales en España, que cualquier sistema escribe bien y que encajan al cantar el «Cumpleaños feliz».
+        </p>
+      </header>
+
+      <form class="search glass" id="search" novalidate>
+        <div class="fields">
+          <label class="field">
+            <span data-i18n="surname1">Primer apellido</span>
+            <input name="surname1" maxlength="40" autocomplete="family-name" spellcheck="false" />
+          </label>
+          <label class="field">
+            <span data-i18n="surname2">Segundo apellido</span>
+            <input name="surname2" maxlength="40" autocomplete="off" spellcheck="false" />
+          </label>
+        </div>
+        <p class="hint" data-i18n="surnameHint">Opcional. Quitamos los nombres cuyo email quedaría mal, como Gala + Ordo → gordo@</p>
+        <div class="actions">
+          <label class="switch">
+            <input type="checkbox" name="ascii" />
+            <span class="track" aria-hidden="true"></span>
+            <span data-i18n="asciiOnly">Solo nombres sin tilde</span>
+          </label>
+          <button type="submit" class="primary" data-i18n="search">Buscar nombres</button>
+        </div>
+      </form>
+
+      <section class="results" aria-labelledby="results-title" aria-busy="true">
+        <div class="results-head">
+          <h2 id="results-title" data-i18n="resultsLabel">Nombres recomendados</h2>
+          <p class="hint" data-i18n="tapHint">Toca un nombre para cantarlo.</p>
+        </div>
+        <div id="status" role="status"></div>
+        <ol class="names" id="names"></ol>
+        <div class="excluded" id="excluded" hidden></div>
+      </section>
+
+      <footer class="footer">
+        <p id="source"></p>
+        <p><a href="https://github.com/gonzaloacosta/ine-name-score-for-dev-parents" data-i18n="code">Código en GitHub</a></p>
+      </footer>
+    </main>
+  </body>
+</html>
