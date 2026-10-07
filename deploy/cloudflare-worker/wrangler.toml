@@ -12,4 +12,4 @@ routes = [
 ]
 
 [vars]
-ORIGIN = "https://ine-name-score-for-dev-parents.vercel.app"
+ORIGIN = "https://name-score.vercel.app"

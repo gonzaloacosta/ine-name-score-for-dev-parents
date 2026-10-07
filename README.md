@@ -17,7 +17,7 @@ All data comes from the [INE](https://www.ine.es/daco/daco42/nombyapel/nombyapel
 
 ## Web
 
-**https://ine-name-score-for-dev-parents.vercel.app** (Spanish / English).
+**https://name-score.vercel.app** (Spanish / English).
 
 Choose girl or boy, type both surnames to drop names whose future email would read badly, and
 tap any name (or type one you already like) to open its score page: the web version of
@@ -25,9 +25,9 @@ tap any name (or type one you already like) to open its score page: the web vers
 against your surnames. The pages call a small JSON API on the same domain:
 
 ```bash
-curl "https://ine-name-score-for-dev-parents.vercel.app/api/rank?top=5&surname1=Ordo&surname2=L%C3%B3pez"
-curl "https://ine-name-score-for-dev-parents.vercel.app/api/rank?sex=male&top=5"
-curl "https://ine-name-score-for-dev-parents.vercel.app/api/explain?name=Bego%C3%B1a&surname1=Ordo"
+curl "https://name-score.vercel.app/api/rank?top=5&surname1=Ordo&surname2=L%C3%B3pez"
+curl "https://name-score.vercel.app/api/rank?sex=male&top=5"
+curl "https://name-score.vercel.app/api/explain?name=Bego%C3%B1a&surname1=Ordo"
 ```
 
 | Endpoint | Param | Default | Notes |

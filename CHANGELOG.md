@@ -4,6 +4,9 @@
 
 ### Changed
 - Repository renamed to `gonzaloacosta/name-score` (old URL redirects).
+- Vercel project renamed: production is `https://name-score.vercel.app` (the old
+  `ine-name-score-for-dev-parents.vercel.app` now 307-redirects). Worker `ORIGIN` and the
+  smoke check point at the new domain.
 - Frontend uses relative URLs only, so it runs at a domain root or under a path prefix.
 
 ### Added

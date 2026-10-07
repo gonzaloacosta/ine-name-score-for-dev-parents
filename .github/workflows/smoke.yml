@@ -14,7 +14,7 @@ jobs:
       github.event.deployment.environment == 'Production'
     runs-on: ubuntu-latest
     env:
-      BASE_URL: ${{ vars.PRODUCTION_URL || 'https://ine-name-score-for-dev-parents.vercel.app' }}
+      BASE_URL: ${{ vars.PRODUCTION_URL || 'https://name-score.vercel.app' }}
     steps:
       - name: API health
         run: curl -fsS --retry 5 --retry-all-errors --retry-delay 5 "$BASE_URL/api/health" | jq -e '.status == "ok"'
