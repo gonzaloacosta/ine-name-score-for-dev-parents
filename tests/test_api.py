@@ -130,7 +130,7 @@ def test_ascii_only_also_filters_excluded_list():
 
 
 def test_unexpected_error_is_generic_500(monkeypatch):
-    def boom():
+    def boom(*_args):
         raise RuntimeError("secret detail")
 
     monkeypatch.setattr("name_selector.api._load_data", boom)
@@ -199,3 +199,75 @@ def test_python_version_pin_is_tracked_for_vercel():
     assert tracked.returncode == 0, (
         ".python-version is not committed; Vercel would use its default Python"
     )
+
+
+# Boys and per-name explanation
+def explain_name(**params):
+    return client.get("/api/explain", params=params)
+
+
+def test_rank_for_boys():
+    body = rank(sex="male", top=200).json()
+    names = {n["name"] for n in body["names"]}
+
+    assert {"Hugo", "Martín", "Álvaro"} <= names
+    assert "Lucía" not in names
+
+
+def test_rank_rejects_unknown_sex():
+    assert rank(sex="other").status_code == 422
+
+
+def test_explain_pool_name_matches_ranking():
+    first = rank(top=1).json()["names"][0]
+    body = explain_name(name="paula").json()
+
+    assert body["name"] == "Paula"
+    assert body["rank"] == 1
+    assert body["total"] == first["total"]
+    assert body["criteria"] == first["criteria"]
+    assert body["pool_size"] == 105
+    assert body["handles"] == []
+    assert body["excluded"] is False
+
+
+def test_explain_name_outside_pool_with_typed_spelling():
+    body = explain_name(name="Begoña").json()
+
+    assert body["name"] == "Begoña"
+    assert body["rank"] is None
+    assert body["in_census"] is True
+    assert body["census_frequency"] > 10_000
+    assert body["census_mean_age"] > 40
+    assert body["births"] == {}
+
+
+def test_explain_boy():
+    body = explain_name(name="Hugo", sex="male").json()
+
+    assert body["sex"] == "male"
+    assert body["rank"] is not None
+
+
+def test_explain_lists_handles_and_flags_bad_ones_without_caching():
+    res = explain_name(name="Gala", surname1="Ordo")
+    body = res.json()
+    gordo = next(h for h in body["handles"] if h["handle"] == "gordo")
+    clean = next(h for h in body["handles"] if h["handle"] == "galaordo")
+
+    assert gordo == {"handle": "gordo", "pattern": "n[0] + s1", "word": "gordo", "tier": "negative"}
+    assert clean["word"] is None and clean["tier"] is None
+    assert body["excluded"] is True
+    assert res.headers["cache-control"] == "no-store"
+
+
+def test_explain_without_surnames_is_cacheable():
+    assert explain_name(name="Julia").headers["cache-control"] == PUBLIC_CACHE
+
+
+@pytest.mark.parametrize(
+    "params",
+    [{}, {"name": ""}, {"name": "J0hn"}, {"name": "a" * 41}, {"name": "<b>"}],
+)
+def test_explain_rejects_invalid_names(params):
+    assert explain_name(**params).status_code == 422
