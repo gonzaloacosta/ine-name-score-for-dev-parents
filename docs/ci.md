@@ -31,3 +31,17 @@ to be up to date with `main`.
 
 If a PR is behind `main`, the merge is refused: rebase it (or press "Update branch") and CI
 re-runs. Renaming the `test` job or the Python matrix requires updating the required checks.
+
+## Deploy and smoke check
+
+Vercel's GitHub app deploys every PR as a preview and every merge to `main` to production.
+[`.github/workflows/smoke.yml`](../.github/workflows/smoke.yml) runs on Vercel's
+`deployment_status` event for **Production** only and checks `/api/health`, `/api/rank?top=3`,
+and that `/` serves the page with a `Content-Security-Policy` header.
+
+Previews are not curled: Vercel Deployment Protection puts preview and per-deployment URLs
+behind a Vercel login (401), and we keep no bypass secret in GitHub. Open the preview link on
+the PR while logged in to Vercel to check it.
+
+The production URL defaults to `https://ine-name-score-for-dev-parents.vercel.app`; override it
+with the repository variable `PRODUCTION_URL` if you add a custom domain.

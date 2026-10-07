@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 - 2026-10-07
+
+### Added
+- Web API (`name_selector/api.py`, FastAPI): `GET /api/rank` with surnames filter, `top`,
+  `ascii_only`; `GET /api/health`. Default ranking cached at the CDN, surname queries `no-store`.
+- Bilingual (ES/EN) frontend in `public/`: song-line hero, palette "Nube moderna",
+  self-hosted Nunito, accessible and responsive.
+- Vercel deployment (`[tool.vercel] entrypoint`, `vercel.json` with security headers) and a
+  production smoke-check workflow.
+
 ## 0.2.0 - 2026-10-07
 
 ### Added

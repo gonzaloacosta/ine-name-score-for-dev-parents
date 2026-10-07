@@ -1,10 +1,11 @@
 [project]
 name = "name-selector"
-version = "0.2.0"
+version = "0.3.0"
 description = "Rank Spanish girls' names by infosec-friendliness, commonness and 'Cumpleaños feliz' fit, using INE data."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.115",
     "openpyxl>=3.1",
 ]
 
@@ -13,13 +14,18 @@ name-selector = "name_selector.cli:main"
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.13",
     "pytest>=8",
     "ruff>=0.6",
+    "uvicorn>=0.30",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.vercel]
+entrypoint = "name_selector.api:app"
 
 [tool.ruff]
 line-length = 100

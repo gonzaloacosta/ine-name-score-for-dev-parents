@@ -15,7 +15,37 @@ Ranks Spanish girls' names on four things at once:
 All data comes from the [INE](https://www.ine.es/daco/daco42/nombyapel/nombyapel.htm)
 (census of 01/01/2025 + newborn names for 2023 and 2024).
 
-## Usage
+## Web
+
+**https://ine-name-score-for-dev-parents.vercel.app** (Spanish / English).
+
+Type both surnames to drop names whose future email would read badly; tap a name to place it
+in the "Cumpleaños feliz" line at the top of the page. The page calls a small JSON API on the same domain:
+
+```bash
+curl "https://ine-name-score-for-dev-parents.vercel.app/api/rank?top=5&surname1=Ordo&surname2=L%C3%B3pez"
+```
+
+| Param | Default | Notes |
+|---|---|---|
+| `surname1`, `surname2` | none | optional; letters, spaces, `-`, `'`; max 40 chars |
+| `top` | 20 | 1–200 |
+| `ascii_only` | false | only names without accents |
+
+Privacy: the API keeps no state, and our code never logs, stores or caches surnames
+(responses with surnames are `no-store`). Vercel's own request logs may include the URL for a
+short retention period.
+
+Run it locally (API + page on one port):
+
+```bash
+uv run uvicorn serve_local:app --app-dir scripts --reload   # http://127.0.0.1:8000
+```
+
+Hosting: Vercel Hobby, deployed by Vercel's GitHub app on every merge to `main` (previews per
+PR). Design and decisions: [docs/superpowers/specs/2026-10-07-web-api-frontend-design.md](docs/superpowers/specs/2026-10-07-web-api-frontend-design.md).
+
+## CLI
 
 Requires [uv](https://docs.astral.sh/uv/).
 
@@ -54,5 +84,6 @@ squash-merges automatically when green. See [docs/ci.md](docs/ci.md).
 
 Layout: `name_selector/ine.py` (download/parse), `dataset.py` (load CSVs),
 `phonetics.py` (syllables, stress, sound-alike key), `lexicon.py` (accents INE strips),
-`scoring.py` (criteria), `handles.py` + `wordlists/` (email/username filter), `cli.py`.
+`scoring.py` (criteria), `handles.py` + `wordlists/` (email/username filter), `cli.py`,
+`api.py` (web API). The frontend lives in `public/` (no build step).
 The processed CSVs in `data/processed/` are kept in the repo so the tool works offline. Raw spreadsheets go to `data/raw/` (git-ignored).

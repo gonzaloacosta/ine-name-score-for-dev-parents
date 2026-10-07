@@ -1,0 +1,53 @@
+// UI strings. Names, handles and words from the API are shown as-is in both languages.
+export const STRINGS = {
+  es: {
+    htmlTitle: "Elige el nombre de tu hija",
+    heading: "Elige un nombre para tu hija",
+    songLine: "Cumpleaños feliz, querida",
+    tagline:
+      "Nombres de niña habituales en España, que cualquier sistema escribe bien y que encajan al cantar el «Cumpleaños feliz».",
+    surname1: "Primer apellido",
+    surname2: "Segundo apellido",
+    surnameHint: "Opcional. Quitamos los nombres cuyo email quedaría mal, como Gala + Ordo → gordo@",
+    asciiOnly: "Solo nombres sin tilde",
+    search: "Buscar nombres",
+    searching: "Buscando…",
+    resultsLabel: "Nombres recomendados",
+    tapHint: "Toca un nombre para cantarlo.",
+    scoreLabel: (score) => `Puntuación ${score} de 100`,
+    excludedTitle: (n) => (n === 1 ? "1 nombre descartado por su email" : `${n} nombres descartados por su email`),
+    summary: (shown, dropped) =>
+      dropped ? `${shown} nombres recomendados y ${dropped} descartados por su email.` : `${shown} nombres recomendados.`,
+    error: "No hemos podido cargar los nombres.",
+    retry: "Reintentar",
+    invalid: "Revisa los apellidos: solo letras, espacios, guion o apóstrofo, y como máximo 40 caracteres.",
+    empty: "Con estos apellidos todos los nombres forman un email desafortunado. Prueba con otro orden o sin el segundo apellido.",
+    source: (date, years) => `Datos del INE: censo a ${date} y nacimientos de ${years}.`,
+    code: "Código en GitHub",
+  },
+  en: {
+    htmlTitle: "Pick your daughter\u2019s name",
+    heading: "Pick a name for your daughter",
+    songLine: "Happy birthday, dear",
+    tagline:
+      "Girls' names that are common in Spain, survive any computer system intact, and fit when you sing “Happy birthday”.",
+    surname1: "First surname",
+    surname2: "Second surname",
+    surnameHint: "Optional. We drop names whose email would read badly, like Gala + Ordo → gordo@",
+    asciiOnly: "Only names without accents",
+    search: "Find names",
+    searching: "Searching…",
+    resultsLabel: "Recommended names",
+    tapHint: "Tap a name to sing it.",
+    scoreLabel: (score) => `Score ${score} out of 100`,
+    excludedTitle: (n) => (n === 1 ? "1 name dropped because of its email" : `${n} names dropped because of their email`),
+    summary: (shown, dropped) =>
+      dropped ? `${shown} recommended names and ${dropped} dropped because of their email.` : `${shown} recommended names.`,
+    error: "The names could not be loaded.",
+    retry: "Try again",
+    invalid: "Check the surnames: letters, spaces, hyphen or apostrophe only, 40 characters at most.",
+    empty: "With these surnames every name makes an unfortunate email. Try another order or leave out the second surname.",
+    source: (date, years) => `INE data: census on ${date} and births in ${years}.`,
+    code: "Code on GitHub",
+  },
+};
