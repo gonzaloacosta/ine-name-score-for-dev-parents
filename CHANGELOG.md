@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.0 - 2026-10-07
+
+### Added
+- Boys' names: INE census (`Hombres`) and births (boys' columns), boys' spelling lexicon,
+  `sex` parameter on the API, `--sex` on the CLI, Niña/Niño toggle on the web (`?sexo=nino`).
+- Score any name, not only the top 100: `explain()` / `name-selector explain` /
+  `GET /api/explain`, measured against the newborn pool.
+- Web score page (`/nombre.html`): opened from any name in the list or from the new
+  "¿Ya tenéis un nombre en mente?" field; shows each criterion, INE figures and the
+  emails/usernames for the family's surnames.
+
+### Changed
+- Tagline now states that names are safe, easy to pair with surnames and free of joke-prone
+  email combinations.
+- Census CSVs keep compound names (María José) for lookups; Ç is kept in keys like Ñ.
+- `phonetic_key` is memoised: uncached API calls drop from ~280 ms to under 15 ms.
+
+### Fixed
+- Site no longer goes blank when the browser blocks site storage.
+- Names without vowels return 422 instead of 500; unknown sounds get no spelling credit.
+- Boys' stress: Eric, Erik, Axel, Liam (llana) and Unai, Arnau (aguda).
+- Score page rank matches the surname-filtered list; dropped names say so.
+
 ## 0.3.0 - 2026-10-07
 
 ### Added

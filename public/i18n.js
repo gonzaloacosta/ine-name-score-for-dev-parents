@@ -1,11 +1,20 @@
 // UI strings. Names, handles and words from the API are shown as-is in both languages.
+// Functions receive `sex` ("female" | "male") first when the wording depends on it.
+const pick = (sex, female, male) => (sex === "male" ? male : female);
+
 export const STRINGS = {
   es: {
-    htmlTitle: "Elige el nombre de tu hija",
-    heading: "Elige un nombre para tu hija",
-    songLine: "Cumpleaños feliz, querida",
-    tagline:
-      "Nombres de niña habituales en España, que cualquier sistema escribe bien y que encajan al cantar el «Cumpleaños feliz».",
+    htmlTitle: (sex) => pick(sex, "Elige el nombre de tu hija", "Elige el nombre de tu hijo"),
+    heading: (sex) => pick(sex, "Elige un nombre para tu hija", "Elige un nombre para tu hijo"),
+    sexLabel: "Niña o niño",
+    female: "Niña",
+    male: "Niño",
+    songLine: (sex) => pick(sex, "Cumpleaños feliz, querida", "Cumpleaños feliz, querido"),
+    tagline: (sex) =>
+      `${pick(sex, "Nombres de niña", "Nombres de niño")} habituales en España, seguros y fáciles de combinar con vuestros apellidos: cualquier sistema los escribe bien, no forman emails ni iniciales que den pie a bromas en el futuro y encajan al cantar el «Cumpleaños feliz».`,
+    lookupLabel: "¿Ya tenéis un nombre en mente?",
+    lookupPlaceholder: "Escribe un nombre",
+    lookup: "Ver su puntuación",
     surname1: "Primer apellido",
     surname2: "Segundo apellido",
     surnameHint: "Opcional. Quitamos los nombres cuyo email quedaría mal, como Gala + Ordo → gordo@",
@@ -13,7 +22,7 @@ export const STRINGS = {
     search: "Buscar nombres",
     searching: "Buscando…",
     resultsLabel: "Nombres recomendados",
-    tapHint: "Toca un nombre para cantarlo.",
+    tapHint: "Toca un nombre para ver su puntuación.",
     scoreLabel: (score) => `Puntuación ${score} de 100`,
     excludedTitle: (n) => (n === 1 ? "1 nombre descartado por su email" : `${n} nombres descartados por su email`),
     summary: (shown, dropped) =>
@@ -21,16 +30,80 @@ export const STRINGS = {
     error: "No hemos podido cargar los nombres.",
     retry: "Reintentar",
     invalid: "Revisa los apellidos: solo letras, espacios, guion o apóstrofo, y como máximo 40 caracteres.",
+    invalidName: "Revisa el nombre: solo letras, espacios, guion o apóstrofo, y como máximo 40 caracteres.",
     empty: "Con estos apellidos todos los nombres forman un email desafortunado. Prueba con otro orden o sin el segundo apellido.",
     source: (date, years) => `Datos del INE: censo a ${date} y nacimientos de ${years}.`,
     code: "Código en GitHub",
+    // Name page
+    back: "Volver a la lista",
+    loadingName: "Calculando la puntuación…",
+    placeInPool: (sex, rank, size) =>
+      `Puesto ${rank} de los ${size} ${pick(sex, "nombres de niña", "nombres de niño")} más puestos en España.`,
+    outsidePool: (sex, years) =>
+      `No está entre los ${pick(sex, "nombres de niña", "nombres de niño")} más puestos en ${years}, así que lo comparamos con ellos.`,
+    droppedFromList: "Con vuestros apellidos este nombre queda fuera de la lista: mirad sus emails más abajo.",
+    spellingUnchecked: "Lo puntuamos tal y como lo has escrito. Si lleva tilde, escríbela para que la puntuación sea exacta.",
+    totalScore: "Puntuación total",
+    criteriaTitle: "Cómo se calcula",
+    criteria: {
+      anonymity: [
+        "Anonimato",
+        "Cuántas personas en España lo llevan. Cuantas más, más difícil es identificar a alguien solo por su nombre en internet.",
+      ],
+      ascii: [
+        "Sin tildes ni ñ",
+        "Bancos, aerolíneas y webs extranjeras lo guardarán igual. Una tilde puede acabar como «LucÃ­a» o perderse.",
+      ],
+      song: [
+        "Cumpleaños feliz",
+        "Lo que mejor encaja al cantarlo: 2 o 3 sílabas, acento en la penúltima y terminado en vocal.",
+      ],
+      spelling: [
+        "Una sola forma de escribirlo",
+        "De todas las personas cuyo nombre suena igual, cuántas lo escriben exactamente así.",
+      ],
+      current: ["Habitual hoy", "Cuántos bebés lo reciben ahora según el INE (los 100 más puestos de cada año)."],
+      systems: [
+        "A prueba de formularios",
+        "Sin espacios, guiones ni palabras como «Null» o «Test», y con una longitud que ningún formulario recorta.",
+      ],
+    },
+    factsTitle: "Datos",
+    people: (sex) => pick(sex, "Mujeres en España con este nombre", "Hombres en España con este nombre"),
+    peopleValue: (n, age) =>
+      age ? `${n.toLocaleString("es-ES")} (edad media ${age.toLocaleString("es-ES")} años)` : n.toLocaleString("es-ES"),
+    notInCensus: "Menos de 20 personas (el INE no publica nombres tan raros)",
+    births: "Bebés con este nombre",
+    birthsOutside: "Fuera de los 100 más puestos",
+    shape: "Sílabas y acento",
+    stress: {
+      aguda: "aguda (acento en la última)",
+      llana: "llana (acento en la penúltima)",
+      "esdrújula": "esdrújula (acento en la antepenúltima)",
+    },
+    shapeValue: (n, stress) => `${n} ${n === 1 ? "sílaba" : "sílabas"}, ${stress}`,
+    pageTitle: (name) => `Puntuación de ${name}`,
+    handlesTitle: (surnames) => `Emails y usuarios con ${surnames}`,
+    handlesTitleNone: "Emails y usuarios",
+    handlesHint: "Añade los apellidos en la página principal para comprobar sus emails.",
+    handleOk: "bien",
+    handleBad: (word) => `forma «${word}»`,
+    handlesVerdictBad: "Este nombre se descartaría con estos apellidos.",
+    handlesVerdictOk: "Ninguna combinación forma palabras desafortunadas.",
+    nameError: "No hemos podido calcular la puntuación.",
   },
   en: {
-    htmlTitle: "Pick your daughter\u2019s name",
-    heading: "Pick a name for your daughter",
-    songLine: "Happy birthday, dear",
-    tagline:
-      "Girls' names that are common in Spain, survive any computer system intact, and fit when you sing “Happy birthday”.",
+    htmlTitle: (sex) => pick(sex, "Pick your daughter’s name", "Pick your son’s name"),
+    heading: (sex) => pick(sex, "Pick a name for your daughter", "Pick a name for your son"),
+    sexLabel: "Girl or boy",
+    female: "Girl",
+    male: "Boy",
+    songLine: () => "Happy birthday, dear",
+    tagline: (sex) =>
+      `${pick(sex, "Girls’ names", "Boys’ names")} that are common in Spain, safe and easy to pair with your surnames: any system writes them correctly, they don’t form emails or initials that invite jokes later on, and they fit when you sing “Happy birthday”.`,
+    lookupLabel: "Already have a name in mind?",
+    lookupPlaceholder: "Type a name",
+    lookup: "See its score",
     surname1: "First surname",
     surname2: "Second surname",
     surnameHint: "Optional. We drop names whose email would read badly, like Gala + Ordo → gordo@",
@@ -38,7 +111,7 @@ export const STRINGS = {
     search: "Find names",
     searching: "Searching…",
     resultsLabel: "Recommended names",
-    tapHint: "Tap a name to sing it.",
+    tapHint: "Tap a name to see its score.",
     scoreLabel: (score) => `Score ${score} out of 100`,
     excludedTitle: (n) => (n === 1 ? "1 name dropped because of its email" : `${n} names dropped because of their email`),
     summary: (shown, dropped) =>
@@ -46,8 +119,59 @@ export const STRINGS = {
     error: "The names could not be loaded.",
     retry: "Try again",
     invalid: "Check the surnames: letters, spaces, hyphen or apostrophe only, 40 characters at most.",
+    invalidName: "Check the name: letters, spaces, hyphen or apostrophe only, 40 characters at most.",
     empty: "With these surnames every name makes an unfortunate email. Try another order or leave out the second surname.",
     source: (date, years) => `INE data: census on ${date} and births in ${years}.`,
     code: "Code on GitHub",
+    back: "Back to the list",
+    loadingName: "Working out the score…",
+    placeInPool: (sex, rank, size) =>
+      `Number ${rank} of the ${size} most common ${pick(sex, "girls’", "boys’")} names in Spain.`,
+    outsidePool: (sex, years) =>
+      `Not among the most common ${pick(sex, "girls’", "boys’")} names of ${years}, so it is measured against them.`,
+    droppedFromList: "With your surnames this name is dropped from the list: see its emails below.",
+    spellingUnchecked: "Scored exactly as typed. If it has an accent, type it so the score is exact.",
+    totalScore: "Total score",
+    criteriaTitle: "How it is scored",
+    criteria: {
+      anonymity: [
+        "Anonymity",
+        "How many people in Spain have it. The more there are, the harder it is to single someone out online by name alone.",
+      ],
+      ascii: [
+        "No accents or ñ",
+        "Banks, airlines and foreign websites store it unchanged. An accent can turn into “LucÃ­a” or get dropped.",
+      ],
+      song: ["Happy birthday", "What fits the tune best: 2 or 3 syllables, stress on the second-to-last, ending in a vowel."],
+      spelling: ["One way to spell it", "Of everyone whose name sounds the same, how many spell it exactly like this."],
+      current: ["Common today", "How many babies get it now, according to INE (top 100 names each year)."],
+      systems: [
+        "Form-proof",
+        "No spaces, hyphens or words like “Null” or “Test”, and a length no form will cut short.",
+      ],
+    },
+    factsTitle: "Facts",
+    people: (sex) => pick(sex, "Women in Spain with this name", "Men in Spain with this name"),
+    peopleValue: (n, age) =>
+      age ? `${n.toLocaleString("en-GB")} (average age ${age.toLocaleString("en-GB")})` : n.toLocaleString("en-GB"),
+    notInCensus: "Fewer than 20 people (INE does not publish rarer names)",
+    births: "Babies given this name",
+    birthsOutside: "Outside the top 100",
+    shape: "Syllables and stress",
+    stress: {
+      aguda: "stressed on the last syllable",
+      llana: "stressed on the second-to-last",
+      "esdrújula": "stressed on the third-to-last",
+    },
+    shapeValue: (n, stress) => `${n} ${n === 1 ? "syllable" : "syllables"}, ${stress}`,
+    pageTitle: (name) => `Score for ${name}`,
+    handlesTitle: (surnames) => `Emails and usernames with ${surnames}`,
+    handlesTitleNone: "Emails and usernames",
+    handlesHint: "Add the surnames on the main page to check its emails.",
+    handleOk: "fine",
+    handleBad: (word) => `spells “${word}”`,
+    handlesVerdictBad: "This name would be dropped with these surnames.",
+    handlesVerdictOk: "No combination spells an unfortunate word.",
+    nameError: "The score could not be worked out.",
   },
 };

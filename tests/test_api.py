@@ -130,7 +130,7 @@ def test_ascii_only_also_filters_excluded_list():
 
 
 def test_unexpected_error_is_generic_500(monkeypatch):
-    def boom():
+    def boom(*_args):
         raise RuntimeError("secret detail")
 
     monkeypatch.setattr("name_selector.api._load_data", boom)
@@ -140,8 +140,20 @@ def test_unexpected_error_is_generic_500(monkeypatch):
     assert res.json() == {"detail": "internal error"}
 
 
+def frontend_js() -> str:
+    return "\n".join(f.read_text(encoding="utf-8") for f in sorted(APP_JS.parent.glob("*.js")))
+
+
+def assert_js_reads(fields):
+    js = frontend_js()
+    for field in fields:
+        assert re.search(rf"\.{field}\b", js), (
+            f"public/*.js no longer reads .{field}; update the contract"
+        )
+
+
 def test_frontend_reads_only_fields_the_api_returns():
-    """Contract: every API field app.js reads must exist in a real response."""
+    """Contract: every /api/rank field the list page reads exists in a real response."""
     body = rank(surname1="Ordo").json()
     reads = {
         "names": ["rank", "name", "total"],
@@ -149,16 +161,38 @@ def test_frontend_reads_only_fields_the_api_returns():
         "reasons": ["handle", "word"],
         "data": ["census_date", "birth_years"],
     }
-    js = APP_JS.read_text(encoding="utf-8")
 
-    for field in [f for fields in reads.values() for f in fields] + list(reads):
-        assert re.search(rf"\.{field}\b", js), (
-            f"app.js no longer reads .{field}; update the contract"
-        )
+    assert_js_reads([f for fields in reads.values() for f in fields] + list(reads))
     assert all(set(reads["names"]) <= set(n) for n in body["names"])
     assert all(set(reads["excluded"]) <= set(e) for e in body["excluded"])
     assert all(set(reads["reasons"]) <= set(r) for e in body["excluded"] for r in e["reasons"])
     assert set(reads["data"]) <= set(body["data"])
+
+
+def test_name_page_reads_only_fields_explain_returns():
+    """Contract: every /api/explain field name.js reads exists in a real response."""
+    body = client.get("/api/explain", params={"name": "Gala", "surname1": "Ordo"}).json()
+    top_level = [
+        "name",
+        "total",
+        "rank",
+        "pool_size",
+        "criteria",
+        "births",
+        "in_census",
+        "census_frequency",
+        "census_mean_age",
+        "syllables",
+        "stress",
+        "handles",
+        "excluded",
+        "data",
+    ]
+    handle_fields = ["handle", "word"]
+
+    assert_js_reads(top_level + handle_fields)
+    assert set(top_level) <= set(body)
+    assert all(set(handle_fields) <= set(h) for h in body["handles"])
 
 
 # Final review fixes
@@ -199,3 +233,93 @@ def test_python_version_pin_is_tracked_for_vercel():
     assert tracked.returncode == 0, (
         ".python-version is not committed; Vercel would use its default Python"
     )
+
+
+# Boys and per-name explanation
+def explain_name(**params):
+    return client.get("/api/explain", params=params)
+
+
+def test_rank_for_boys():
+    body = rank(sex="male", top=200).json()
+    names = {n["name"] for n in body["names"]}
+
+    assert {"Hugo", "Martín", "Álvaro"} <= names
+    assert "Lucía" not in names
+
+
+def test_rank_rejects_unknown_sex():
+    assert rank(sex="other").status_code == 422
+
+
+def test_explain_pool_name_matches_ranking():
+    first = rank(top=1).json()["names"][0]
+    body = explain_name(name="paula").json()
+
+    assert body["name"] == "Paula"
+    assert body["rank"] == 1
+    assert body["total"] == first["total"]
+    assert body["criteria"] == first["criteria"]
+    assert body["pool_size"] == len(rank(top=200).json()["names"])
+    assert body["handles"] == []
+    assert body["excluded"] is False
+
+
+def test_explain_name_outside_pool_with_typed_spelling():
+    body = explain_name(name="Begoña").json()
+
+    assert body["name"] == "Begoña"
+    assert body["rank"] is None
+    assert body["in_census"] is True
+    assert body["census_frequency"] > 10_000
+    assert body["census_mean_age"] > 40
+    assert body["births"] == {}
+
+
+def test_explain_boy():
+    body = explain_name(name="Hugo", sex="male").json()
+
+    assert body["sex"] == "male"
+    assert body["rank"] is not None
+
+
+def test_explain_lists_handles_and_flags_bad_ones_without_caching():
+    res = explain_name(name="Gala", surname1="Ordo")
+    body = res.json()
+    gordo = next(h for h in body["handles"] if h["handle"] == "gordo")
+    clean = next(h for h in body["handles"] if h["handle"] == "galaordo")
+
+    assert gordo == {"handle": "gordo", "pattern": "n[0] + s1", "word": "gordo", "tier": "negative"}
+    assert clean["word"] is None and clean["tier"] is None
+    assert body["excluded"] is True
+    assert res.headers["cache-control"] == "no-store"
+
+
+def test_explain_without_surnames_is_cacheable():
+    assert explain_name(name="Julia").headers["cache-control"] == PUBLIC_CACHE
+
+
+@pytest.mark.parametrize(
+    "params",
+    [{}, {"name": ""}, {"name": "J0hn"}, {"name": "a" * 41}, {"name": "<b>"}],
+)
+def test_explain_rejects_invalid_names(params):
+    assert explain_name(**params).status_code == 422
+
+
+def test_explain_name_without_vowels_is_422():
+    assert explain_name(name="Brr").status_code == 422
+
+
+def test_explain_reports_unverified_spelling():
+    assert explain_name(name="Zenobia").json()["spelling_checked"] is False
+    assert explain_name(name="Paula").json()["spelling_checked"] is True
+
+
+def test_explain_rank_matches_the_filtered_list():
+    listed = [n["name"] for n in rank(surname1="Ordo", top=200).json()["names"]]
+
+    zoe = explain_name(name="Zoe", surname1="Ordo").json()
+
+    assert zoe["rank"] == listed.index("Zoe") + 1
+    assert explain_name(name="Gala", surname1="Ordo").json()["rank"] is None

@@ -2,11 +2,11 @@
 
 [![CI](https://github.com/gonzaloacosta/ine-name-score-for-dev-parents/actions/workflows/ci.yml/badge.svg)](https://github.com/gonzaloacosta/ine-name-score-for-dev-parents/actions/workflows/ci.yml)
 
-Ranks Spanish girls' names on four things at once:
+Ranks Spanish girls' and boys' names on four things at once:
 
 1. **Information security**: the name survives IT systems intact (no accents/ñ, no reserved
    words), is spelled only one way, and has enough namesakes to make OSINT targeting harder.
-2. **Normal in Spain**: candidates are only names in the INE top-100 for newborn girls.
+2. **Normal in Spain**: candidates are only names in the INE top-100 for newborn girls or boys.
 3. **"Cumpleaños feliz" fit**: 2–3 syllables, stressed on the penultimate syllable, ending in
    a vowel.
 4. **No embarrassing email/username**: given the surnames, names whose future handle spells a
@@ -19,18 +19,27 @@ All data comes from the [INE](https://www.ine.es/daco/daco42/nombyapel/nombyapel
 
 **https://ine-name-score-for-dev-parents.vercel.app** (Spanish / English).
 
-Type both surnames to drop names whose future email would read badly; tap a name to place it
-in the "Cumpleaños feliz" line at the top of the page. The page calls a small JSON API on the same domain:
+Choose girl or boy, type both surnames to drop names whose future email would read badly, and
+tap any name (or type one you already like) to open its score page: the web version of
+`name-selector explain`, with every criterion explained, INE figures and its emails checked
+against your surnames. The pages call a small JSON API on the same domain:
 
 ```bash
 curl "https://ine-name-score-for-dev-parents.vercel.app/api/rank?top=5&surname1=Ordo&surname2=L%C3%B3pez"
+curl "https://ine-name-score-for-dev-parents.vercel.app/api/rank?sex=male&top=5"
+curl "https://ine-name-score-for-dev-parents.vercel.app/api/explain?name=Bego%C3%B1a&surname1=Ordo"
 ```
 
-| Param | Default | Notes |
-|---|---|---|
-| `surname1`, `surname2` | none | optional; letters, spaces, `-`, `'`; max 40 chars |
-| `top` | 20 | 1–200 |
-| `ascii_only` | false | only names without accents |
+| Endpoint | Param | Default | Notes |
+|---|---|---|---|
+| both | `sex` | `female` | `female` or `male` |
+| both | `surname1`, `surname2` | none | optional; letters, spaces, `-`, `'`; max 40 chars |
+| `/api/rank` | `top` | 20 | 1–200 |
+| `/api/rank` | `ascii_only` | false | only names without accents |
+| `/api/explain` | `name` | required | any name; outside the top 100 it is scored against it |
+
+Web pages: `/?sexo=nina|nino` (list) and `/nombre.html?nombre=Julia&sexo=nina` (score page).
+Surnames move between pages in the browser's session storage, never in a URL.
 
 Privacy: the API keeps no state, and our code never logs, stores or caches surnames
 (responses with surnames are `no-store`). Vercel's own request logs may include the URL for a
@@ -53,7 +62,9 @@ Requires [uv](https://docs.astral.sh/uv/).
 uv sync
 uv run name-selector rank                     # top 20
 uv run name-selector rank --ascii-only --top 10
-uv run name-selector explain julia            # score breakdown for one name
+uv run name-selector explain julia            # score breakdown for any name
+uv run name-selector --sex male rank          # boys' names (default: female)
+uv run name-selector --sex male explain álvaro
 uv run name-selector rank --surnames Ordo López        # drop names with bad handles
 uv run name-selector handles Lucía Ocaña Pérez         # check one full name (exit 1 if bad)
 uv run name-selector --weights song=0.4,ascii=0 rank   # change priorities

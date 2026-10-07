@@ -1,9 +1,23 @@
-import { STRINGS } from "/i18n.js";
+// List page: ranking, surnames filter, girl/boy switch and name lookup.
+import {
+  applyStaticStrings,
+  bindLanguage,
+  el,
+  formatSource,
+  handleWithWord,
+  loadSurnames,
+  nameUrl,
+  saveSurnames,
+  setSex,
+  sexParam,
+  state,
+  t,
+} from "/common.js";
 
-const LANG_KEY = "name-selector-lang";
 const TOP = 20;
 
 const form = document.getElementById("search");
+const lookup = document.getElementById("lookup");
 const namesList = document.getElementById("names");
 const status = document.getElementById("status");
 const excludedBox = document.getElementById("excluded");
@@ -11,55 +25,10 @@ const songName = document.getElementById("song-name");
 const results = document.querySelector(".results");
 const submitButton = form.querySelector("button[type=submit]");
 
-let lang = initialLanguage();
 let lastBody = null;
 let lastFailure = null; // "error" | "invalid" | null
 let sungName = null;
-
-function initialLanguage() {
-  try {
-    const saved = localStorage.getItem(LANG_KEY);
-    if (saved in STRINGS) return saved;
-  } catch {
-    // Storage blocked (private mode): fall back to the browser language.
-  }
-  return navigator.language?.toLowerCase().startsWith("en") ? "en" : "es";
-}
-
-const t = (key, ...args) => {
-  const value = STRINGS[lang][key];
-  return typeof value === "function" ? value(...args) : value;
-};
-
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
-
-function applyStaticStrings() {
-  document.documentElement.lang = lang;
-  document.title = t("htmlTitle");
-  for (const node of document.querySelectorAll("[data-i18n]")) {
-    node.textContent = t(node.dataset.i18n);
-  }
-  for (const button of document.querySelectorAll("[data-lang]")) {
-    button.setAttribute("aria-pressed", String(button.dataset.lang === lang));
-  }
-}
-
-function setLanguage(next) {
-  lang = next;
-  try {
-    localStorage.setItem(LANG_KEY, next);
-  } catch {
-    // Not persisted; the choice still applies to this visit.
-  }
-  applyStaticStrings();
-  if (lastFailure) renderFailure(lastFailure);
-  else if (lastBody) render(lastBody);
-}
+let requestId = 0; // ignore responses that arrive after a newer search
 
 function sing(name) {
   if (!name || name === sungName) return;
@@ -68,9 +37,6 @@ function sing(name) {
   songName.classList.remove("is-new");
   void songName.offsetWidth; // restart the entrance animation
   songName.classList.add("is-new");
-  for (const row of namesList.querySelectorAll(".name-row")) {
-    row.setAttribute("aria-current", String(row.dataset.name === name));
-  }
 }
 
 function renderLoading() {
@@ -103,10 +69,8 @@ function renderFailure(kind) {
 
 function nameRow(entry) {
   const li = el("li");
-  const row = el("button", "name-row glass");
-  row.type = "button";
-  row.dataset.name = entry.name;
-  row.setAttribute("aria-current", String(entry.name === sungName));
+  const row = el("a", "name-row glass");
+  row.href = nameUrl(entry.name);
 
   const score = Math.round(entry.total * 100);
   const bar = el("span", "bar");
@@ -119,25 +83,8 @@ function nameRow(entry) {
   scoreText.setAttribute("aria-label", t("scoreLabel", score));
 
   row.append(el("span", "rank", String(entry.rank)), el("span", "name", entry.name), bar, scoreText);
-  row.addEventListener("click", () => sing(entry.name));
   li.append(row);
   return li;
-}
-
-// Bold the offending word inside the handle: "analopez" + "anal" → <b>anal</b>opez@
-function handleWithWord(reason) {
-  const span = el("span");
-  const start = reason.handle.indexOf(reason.word);
-  if (start < 0) {
-    span.textContent = `${reason.handle}@`;
-    return span;
-  }
-  span.append(
-    reason.handle.slice(0, start),
-    el("b", "", reason.word),
-    `${reason.handle.slice(start + reason.word.length)}@`,
-  );
-  return span;
 }
 
 function renderExcluded(excluded) {
@@ -149,7 +96,8 @@ function renderExcluded(excluded) {
   const list = el("ul");
   for (const item of excluded) {
     const li = el("li");
-    li.append(`${item.name} `, "→ ", handleWithWord(item.reasons[0]));
+    const reason = item.reasons[0];
+    li.append(`${item.name} `, "→ ", handleWithWord(reason.handle, reason.word));
     list.append(li);
   }
   excludedBox.replaceChildren(el("h3", "", t("excludedTitle", excluded.length)), list);
@@ -168,21 +116,24 @@ function render(body) {
   }
   namesList.replaceChildren(...body.names.map(nameRow));
   renderExcluded(body.excluded);
-  if (!body.names.some((n) => n.name === sungName)) sing(body.names[0]?.name);
+  sing(body.names[0]?.name);
+  document.getElementById("source").textContent = formatSource(body.data);
+}
 
-  const [day, month, year] = body.data.census_date.split("-").reverse();
-  const years = body.data.birth_years.join(lang === "es" ? " y " : " and ");
-  document.getElementById("source").textContent = t("source", `${day}/${month}/${year}`, years);
+function surnamesFromForm() {
+  const data = new FormData(form);
+  return ["surname1", "surname2"].map((field) => String(data.get(field) || "").trim()).filter(Boolean);
 }
 
 async function search() {
-  const data = new FormData(form);
-  const params = new URLSearchParams({ top: String(TOP) });
-  for (const field of ["surname1", "surname2"]) {
-    const value = String(data.get(field) || "").trim();
-    if (value) params.set(field, value);
-  }
-  if (data.get("ascii")) params.set("ascii_only", "true");
+  const id = ++requestId;
+  const params = new URLSearchParams({ top: String(TOP), sex: state.sex });
+  // Captured now: edits made while the request is in flight were not searched.
+  const surnames = surnamesFromForm();
+  const [surname1, surname2] = surnames;
+  if (surname1) params.set("surname1", surname1);
+  if (surname2) params.set("surname2", surname2);
+  if (new FormData(form).get("ascii")) params.set("ascii_only", "true");
 
   for (const input of form.querySelectorAll("input[name^=surname]")) input.removeAttribute("aria-invalid");
   submitButton.disabled = true;
@@ -190,9 +141,11 @@ async function search() {
   renderLoading();
   try {
     const response = await fetch(`/api/rank?${params}`, { headers: { Accept: "application/json" } });
+    if (id !== requestId) return;
     if (response.status === 422) {
       lastFailure = "invalid";
       lastBody = null;
+      saveSurnames([]); // the name page must not check emails against rejected surnames
       for (const input of form.querySelectorAll("input[name^=surname]")) {
         if (input.value.trim()) input.setAttribute("aria-invalid", "true");
       }
@@ -200,18 +153,28 @@ async function search() {
       return;
     }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    lastBody = await response.json();
+    const body = await response.json();
+    if (id !== requestId) return;
+    lastBody = body;
     lastFailure = null;
-    render(lastBody);
+    saveSurnames(surnames);
+    render(body);
   } catch (error) {
+    if (id !== requestId) return;
     console.error("name-selector: loading names failed", error);
     lastFailure = "error";
     lastBody = null;
     renderFailure("error");
   } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = t("search");
+    if (id === requestId) {
+      submitButton.disabled = false;
+      submitButton.textContent = t("search");
+    }
   }
+}
+
+function syncLookupSex() {
+  lookup.elements.sexo.value = sexParam();
 }
 
 form.addEventListener("submit", (event) => {
@@ -219,9 +182,25 @@ form.addEventListener("submit", (event) => {
   search();
 });
 
-for (const button of document.querySelectorAll("[data-lang]")) {
-  button.addEventListener("click", () => setLanguage(button.dataset.lang));
+for (const button of document.querySelectorAll("[data-sex]")) {
+  button.addEventListener("click", () => {
+    if (button.dataset.sex === state.sex) return;
+    setSex(button.dataset.sex);
+    syncLookupSex();
+    sungName = null;
+    search();
+  });
 }
 
+bindLanguage(() => {
+  if (lastFailure) renderFailure(lastFailure);
+  else if (lastBody) render(lastBody);
+});
+
+// Coming back from a name page: keep the surnames the family already typed.
+loadSurnames().forEach((surname, i) => {
+  form.elements[`surname${i + 1}`].value = surname;
+});
 applyStaticStrings();
+syncLookupSex();
 search();

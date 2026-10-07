@@ -34,7 +34,7 @@ class BadHandle:
 
 def slug(text: str) -> str:
     """What an email/username system keeps: lowercase a-z only."""
-    return re.sub(r"[^a-z]", "", strip_accents(text).lower().replace("ñ", "n"))
+    return re.sub(r"[^a-z]", "", strip_accents(text).lower().replace("ñ", "n").replace("ç", "c"))
 
 
 @cache

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Elige el nombre de tu hija</title>
-    <meta name="description" content="Nombres de niña habituales en España, seguros en cualquier sistema y que encajan en el Cumpleaños feliz." />
+    <meta name="description" content="Nombres de niña y niño habituales en España, seguros, fáciles de combinar con vuestros apellidos y que encajan en el Cumpleaños feliz." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="/fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/styles.css" />
@@ -14,10 +14,16 @@
     <div class="sky" aria-hidden="true"><span class="cloud cloud-sky"></span><span class="cloud cloud-pink"></span><span class="cloud cloud-lilac"></span></div>
 
     <main class="page">
-      <nav class="lang" aria-label="Idioma / Language">
-        <button type="button" data-lang="es" aria-pressed="true">ES</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
-      </nav>
+      <div class="topbar">
+        <div class="toggle sex" role="group" aria-label="Niña o niño" data-i18n-label="sexLabel">
+          <button type="button" data-sex="female" aria-pressed="true" data-i18n="female">Niña</button>
+          <button type="button" data-sex="male" aria-pressed="false" data-i18n="male">Niño</button>
+        </div>
+        <nav class="toggle lang" aria-label="Idioma / Language">
+          <button type="button" data-lang="es" aria-pressed="true">ES</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </nav>
+      </div>
 
       <header class="hero">
         <h1 class="heading" data-i18n="heading">Elige un nombre para tu hija</h1>
@@ -26,7 +32,7 @@
           <span class="song-name" id="song-name">Paula</span>
         </p>
         <p class="tagline" data-i18n="tagline">
-          Nombres de niña habituales en España, que cualquier sistema escribe bien y que encajan al cantar el «Cumpleaños feliz».
+          Nombres de niña habituales en España, seguros y fáciles de combinar con vuestros apellidos: cualquier sistema los escribe bien, no forman emails ni iniciales que den pie a bromas en el futuro y encajan al cantar el «Cumpleaños feliz».
         </p>
       </header>
 
@@ -52,10 +58,19 @@
         </div>
       </form>
 
+      <form class="lookup glass" id="lookup" action="/nombre.html" method="get">
+        <label class="field" for="lookup-name" data-i18n="lookupLabel">¿Ya tenéis un nombre en mente?</label>
+        <div class="lookup-row">
+          <input id="lookup-name" name="nombre" maxlength="40" required autocomplete="off" spellcheck="false" data-i18n-placeholder="lookupPlaceholder" placeholder="Escribe un nombre" />
+          <input type="hidden" name="sexo" value="nina" />
+          <button type="submit" class="secondary" data-i18n="lookup">Ver su puntuación</button>
+        </div>
+      </form>
+
       <section class="results" aria-labelledby="results-title" aria-busy="true">
         <div class="results-head">
           <h2 id="results-title" data-i18n="resultsLabel">Nombres recomendados</h2>
-          <p class="hint" data-i18n="tapHint">Toca un nombre para cantarlo.</p>
+          <p class="hint" data-i18n="tapHint">Toca un nombre para ver su puntuación.</p>
         </div>
         <div id="status" role="status"></div>
         <ol class="names" id="names"></ol>
