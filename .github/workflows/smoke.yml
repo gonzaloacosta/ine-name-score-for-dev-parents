@@ -34,7 +34,7 @@ jobs:
       - name: Frontend and security headers
         run: |
           curl -fsS --retry 5 --retry-all-errors --retry-delay 5 -D headers.txt -o index.html "$BASE_URL/"
-          grep -q 'src="/app.js"' index.html
+          grep -q 'src="app.js"' index.html
           grep -qi '^content-security-policy:' headers.txt
           curl -fsS --retry 5 --retry-all-errors --retry-delay 5 -o name.html "$BASE_URL/nombre.html?nombre=Julia"
-          grep -q 'src="/name.js"' name.html
+          grep -q 'src="name.js"' name.html

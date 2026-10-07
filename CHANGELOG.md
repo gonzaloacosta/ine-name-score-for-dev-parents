@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 - 2026-10-07
+
+### Changed
+- Repository renamed to `gonzaloacosta/name-score` (old URL redirects).
+- Frontend uses relative URLs only, so it runs at a domain root or under a path prefix.
+
+### Added
+- Cloudflare Worker (`deploy/cloudflare-worker/`) serving the app at
+  `gonzaloacosta.me/name-score/`; tested locally with `wrangler dev` (82/82 browser checks).
+
 ## 0.4.0 - 2026-10-07
 
 ### Added

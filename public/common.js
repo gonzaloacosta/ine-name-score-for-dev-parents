@@ -1,5 +1,5 @@
 // Shared by the list page (app.js) and the name page (name.js).
-import { STRINGS } from "/i18n.js";
+import { STRINGS } from "./i18n.js";
 
 const LANG_KEY = "name-selector-lang";
 const SEX_KEY = "name-selector-sex";
@@ -68,12 +68,13 @@ export function handleWithWord(handle, word) {
 
 export const sexParam = (sex = state.sex) => SEX_PARAM[sex];
 
+// Relative URLs only: the site also runs under a path prefix (gonzaloacosta.me/name-score/).
 export function nameUrl(name) {
-  return `/nombre.html?${new URLSearchParams({ nombre: name, sexo: sexParam() })}`;
+  return `nombre.html?${new URLSearchParams({ nombre: name, sexo: sexParam() })}`;
 }
 
 export function listUrl() {
-  return `/?${new URLSearchParams({ sexo: sexParam() })}`;
+  return `./?${new URLSearchParams({ sexo: sexParam() })}`;
 }
 
 // Surnames travel between pages in sessionStorage, never in a URL (history, logs).

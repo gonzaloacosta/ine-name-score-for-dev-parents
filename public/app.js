@@ -12,7 +12,7 @@ import {
   sexParam,
   state,
   t,
-} from "/common.js";
+} from "./common.js";
 
 const TOP = 20;
 
@@ -140,7 +140,7 @@ async function search() {
   submitButton.textContent = t("searching");
   renderLoading();
   try {
-    const response = await fetch(`/api/rank?${params}`, { headers: { Accept: "application/json" } });
+    const response = await fetch(`api/rank?${params}`, { headers: { Accept: "application/json" } });
     if (id !== requestId) return;
     if (response.status === 422) {
       lastFailure = "invalid";
